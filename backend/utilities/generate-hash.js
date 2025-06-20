@@ -1,15 +1,6 @@
-// =================================================================
-//                   PASSWORD HASH GENERATOR
-// =================================================================
-// File: generate-hash.js
-// Description: A simple utility to generate a bcrypt hash for a password.
-// Usage: node generate-hash.js yourpassword
-// =================================================================
-
 const bcrypt = require('bcrypt');
-const saltRounds = 10; // The cost factor for hashing
+const saltRounds = 10; 
 
-// Get the password from command-line arguments
 const password = process.argv[2];
 
 if (!password) {
@@ -19,7 +10,6 @@ if (!password) {
 
 
 
-// Generate the hash
 bcrypt.hash(password, saltRounds, (err, hash) => {
     if (err) {
         console.error('Error generating hash:', err);
