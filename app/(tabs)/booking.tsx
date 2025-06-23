@@ -1,5 +1,4 @@
-import { useTheme } from "@react-navigation/native";
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Alert,
   Button,
@@ -10,201 +9,244 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTheme } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Colors } from '@/constants/Colors';
 
-interface Booking {
-  [day: string]: {
-    [meal: string]: number;
-  };
-}
 
-const mealPrices: Record<string, number> = {
-  breakfast: 30,
-  lunch: 60,
-  dinner: 50,
-};
+type MealKey = "breakfast" | "lunch" | "dinner";
+type MealDetails = { description: string; price: number; coupons: number };
+type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
+type Booking = Record<string, Record<MealKey, number>>;
 
-const weeklyMenu: Record<string, { breakfast: string; lunch: string; dinner: string }> = {
-  Monday: {
-    breakfast: "Idli with chutney and sambar. Light and healthy South Indian start to the day.",
-    lunch: "Rice, sambar, and a side of vegetable curry. Perfect balanced lunch.",
-    dinner: "Chapati with kurma and salad. A comforting dinner option.",
-  },
-  Tuesday: {
-    breakfast: "Poha with sev and lemon. Tasty and light Maharashtrian breakfast.",
-    lunch: "Rajma Chawal with pickle. Rich protein-packed North Indian meal.",
-    dinner: "Paratha with curd and pickle. Simple and wholesome dinner.",
-  },
-  Wednesday: {
-    breakfast: "Upma with coconut chutney. Filling and nutritious breakfast.",
-    lunch: "Dal, rice, and a dry vegetable. Classic homestyle lunch.",
-    dinner: "Dosa with chutney and sambar. Crispy South Indian delight.",
-  },
-  Thursday: {
-    breakfast: "Bread jam and boiled eggs. Quick and energizing breakfast.",
-    lunch: "Fried rice with gobi manchurian. Indo-Chinese favorite.",
-    dinner: "Pulao with raita and papad. Mild and flavorful evening meal.",
-  },
-  Friday: {
-    breakfast: "Aloo paratha with butter and curd. Hearty Punjabi breakfast.",
-    lunch: "Chole rice with salad. Spicy and satisfying meal.",
-    dinner: "Roti with paneer curry. Delicious protein-rich dinner.",
-  },
-  Saturday: {
-    breakfast: "Pongal with sambar and chutney. South Indian classic comfort food.",
-    lunch: "Veg biryani with raita. Aromatic and festive meal.",
-    dinner: "Poori with bhaji. Crispy and flavorful end to the day.",
-  },
-  Sunday: {
-    breakfast: "Masala dosa with chutney. Spicy and crunchy breakfast special.",
-    lunch: "Full thali (rice, dal, sabzi, roti, dessert). Sunday feast.",
-    dinner: "Burger with fries and ketchup. Tasty and fun meal to end the week.",
-  },
-};
 
-const days: string[] = [
+const MENU_KEY = "weeklyMenu";
+const days = [
+  "Sunday",
   "Monday",
   "Tuesday",
   "Wednesday",
   "Thursday",
   "Friday",
   "Saturday",
-  "Sunday",
 ];
 
-const meals: string[] = ["breakfast", "lunch", "dinner"];
-
 export default function BookingScreen() {
+  const isDark = useTheme().dark;
+  const styles = useMemo(() => createStyles(isDark), [isDark]);
+
+  const [menuData, setMenuData] = useState<WeeklyMenu | null>(null);
   const [bookings, setBookings] = useState<Booking>({});
-  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const todayIndex = new Date().getDay();
+  const todayLabel = days[todayIndex];
+  const [expandedDay, setExpandedDay] = useState<string>(todayLabel);
 
-  const colorScheme = useTheme().dark; // light | dark
-    const mode= !colorScheme ?'light' : 'dark' ;
-  const styles = createStyles(mode);
+  useEffect(() => {
+    (async () => {
+      const raw = await AsyncStorage.getItem(MENU_KEY);
+      if (raw) setMenuData(JSON.parse(raw));
+    })();
+  }, []);
 
-  const toggleMeal = (day: string, meal: string) => {
-    setBookings((prev) => {
-      const current = prev[day]?.[meal] ?? 0;
-      const updated = { ...prev };
-      if (!updated[day]) updated[day] = {};
-      updated[day][meal] = current === 0 ? 1 : 0;
-      return updated;
-    });
+  const isPastDay = (day: string) => days.indexOf(day) < todayIndex;
+
+
+  const isMealOpen = (day: string, meal: MealKey) => {
+    if (day !== todayLabel) return true; // future day — always open
+
+    // Today: enforce cut‑off times
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    if (meal === "breakfast") return h < 6;
+    if (meal === "lunch") return h < 12 || (h === 11 && m <= 59);
+    if (meal === "dinner") return h < 18;
+    return true;
   };
 
-  const changePeople = (day: string, meal: string, delta: number) => {
-    setBookings((prev) => {
-      const count = prev[day]?.[meal] ?? 0;
-      const newCount = Math.max(1, count + delta);
-      const updated = { ...prev };
-      if (!updated[day]) updated[day] = {};
-      updated[day][meal] = newCount;
-      return updated;
-    });
-  };
-
-  const calculateTotalPrice = () => {
-    let total = 0;
-    for (const day in bookings) {
-      for (const meal in bookings[day]) {
-        total += (bookings[day][meal] ?? 0) * mealPrices[meal];
-      }
+  const toggleMeal = (day: string, meal: MealKey) => {
+    if (isPastDay(day) || !isMealOpen(day, meal)) {
+      Alert.alert("Booking Closed", "Booking is closed for this selection.");
+      return;
     }
-    return total;
+    setBookings((prev) => {
+      const updated = { ...prev };
+      const curr = prev[day]?.[meal] ?? 0;
+      if (!updated[day]) updated[day] = {} as any;
+      updated[day][meal] = curr === 0 ? 1 : 0;
+      return updated;
+    });
   };
+
+  const changePeople = (day: string, meal: MealKey, delta: number) => {
+    setBookings((prev) => {
+      const updated = { ...prev };
+      const curr = prev[day]?.[meal] ?? 0;
+      const next = Math.max(1, curr + delta);
+      if (!updated[day]) updated[day] = {} as any;
+      updated[day][meal] = next;
+      return updated;
+    });
+  };
+
+  const calculateTotalPrice = () =>
+    Object.entries(bookings).reduce(
+      (sum, [day, meals]) =>
+        sum +
+        Object.entries(meals).reduce(
+          (daySum, [meal, cnt]) =>
+            daySum + cnt * (menuData![day][meal as MealKey].price),
+          0
+        ),
+      0
+    );
 
   const handleSubmit = () => {
     const total = calculateTotalPrice();
-    const selectedData = bookings;
-console.log(selectedData);
-    Alert.alert("Booking Submitted", `${JSON.stringify(bookings, null, 2)}\nTotal Price: ₹${total}`);
+    Alert.alert(
+      "Booking Submitted",
+      `${JSON.stringify(bookings, null, 2)}\nTotal Price: ₹${total}`
+    );
   };
 
+  const showConfirmationAlert = () => {
+    setTimeout(() => {
+      Alert.alert(
+        "Confirm Submission",
+        "Are you sure you want to submit?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Submit", onPress: handleSubmit },
+        ],
+        { cancelable: true }
+      );
+    }, 100);
+  };
+
+  if (!menuData)
+    return (
+      <View style={styles.container}>
+        <Text style={styles.heading}>Loading menu…</Text>
+      </View>
+    );
 
   return (
     <View style={{ flex: 1 }}>
-    <ScrollView style={styles.container}>
-      <Text style={styles.notice}>
-        Book only for this week. Book before 11:59 AM for lunch, 6 PM for dinner, and 6 AM for breakfast.
-      </Text>
-      <Text style={styles.heading}>Book Your Meals</Text>
-      {days.map((day) => (
-        <View key={day} style={styles.daySection}>
-          <TouchableOpacity onPress={() => setExpandedDay(day === expandedDay ? null : day)}>
-            <Text style={styles.dayTitle}>{day}</Text>
-          </TouchableOpacity>
-          {expandedDay === day && (
-            <View style={styles.mealSection}>
-              {meals.map((meal) => (
-                <View key={meal} style={styles.mealRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.mealLabel}>{meal}</Text>
-                    <Text style={styles.mealDescription}>{weeklyMenu[day][meal]}</Text>
-                    <Text style={styles.mealPrice}>₹{mealPrices[meal]}</Text>
-                  </View>
-                  <Switch
-                    value={(bookings[day]?.[meal] ?? 0) > 0}
-                    onValueChange={() => toggleMeal(day, meal)}
-                  />
-                  {(bookings[day]?.[meal] ?? 0) > 0 && (
-                    <View style={styles.counterContainer}>
-                      <TouchableOpacity onPress={() => changePeople(day, meal, -1)}>
-                        <Text style={styles.counterBtn}>-</Text>
-                      </TouchableOpacity>
-                      <Text style={styles.counterText}>{bookings[day][meal]}</Text>
-                      <TouchableOpacity onPress={() => changePeople(day, meal, 1)}>
-                        <Text style={styles.counterBtn}>+</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
+      <ScrollView style={styles.container}>
+        <Text style={styles.notice}>
+          Book today before cut‑off times, or any time for future days. Past days are locked.
+        </Text>
+        <Text style={styles.heading}>Book Your Meals</Text>
+
+        {Object.entries(menuData).map(([day, meals]) => {
+          const past = isPastDay(day);
+          const isExpanded = expandedDay === day;
+          return (
+            <View key={day} style={styles.daySection}>
+              {past ? (
+                <>
+                  <Text style={styles.dayTitle}>{day}</Text>
+                  <Text style={styles.deadlineNote}>(Booking closed)</Text>
+                </>
+              ) : (
+                <TouchableOpacity onPress={() => setExpandedDay((ed) => (ed === day ? "" : day))}>
+                  <Text style={styles.dayTitle}>{day}</Text>
+                </TouchableOpacity>
+              )}
+
+              {!past && isExpanded && (
+                <View style={styles.mealSection}>
+                  {(Object.keys(meals) as MealKey[]).map((meal) => {
+                    const open = isMealOpen(day, meal);
+                    const count = bookings[day]?.[meal] ?? 0;
+                    return (
+                      <View key={meal} style={styles.mealRow}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.mealLabel}>
+                            {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                          </Text>
+                          <Text style={styles.mealDescription}>{meals[meal].description}</Text>
+                          <Text style={styles.mealPrice}>₹{meals[meal].price}</Text>
+                          <Text style={styles.coupon}>{meals[meal].coupons} coupon(s)</Text>
+                        </View>
+
+                        <Switch
+                          value={count > 0}
+                          disabled={!open}
+                          onValueChange={() => toggleMeal(day, meal)}
+                          trackColor={{ true: open ? undefined : "#888" }}
+                          thumbColor={open ? undefined : "#555"}
+                        />
+
+                        {open && count > 0 && (
+                          <View style={styles.counterContainer}>
+                            <TouchableOpacity onPress={() => changePeople(day, meal, -1)}>
+                              <Text style={styles.counterBtn}>-</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.counterText}>{count}</Text>
+                            <TouchableOpacity onPress={() => changePeople(day, meal, 1)}>
+                              <Text style={styles.counterBtn}>+</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+
+                        {!open && day === todayLabel && (
+                          <Text style={styles.closedLabel}>Closed for today</Text>
+                        )}
+                      </View>
+                    );
+                  })}
                 </View>
-              ))}
+              )}
             </View>
-          )}
+          );
+        })}
+
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>Total Price: ₹{calculateTotalPrice()}</Text>
         </View>
-      ))}
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Total Price: ₹{calculateTotalPrice()}</Text>
-      </View>
-      <View style={styles.submitContainer}>
-        <Button title="Submit" onPress={handleSubmit} />
-      </View>
-    </ScrollView>
+        <View style={styles.submitContainer}>
+          <Button title="Submit" onPress={showConfirmationAlert} />
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-function createStyles(mode: "light" | "dark") {
-  const isDark = mode==="dark"? true : false;
+function createStyles(isDark: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
       padding: 16,
-      backgroundColor: isDark ? "#000" : "#fff",
-      flexGrow: 1,
-    },
-    heading: {
-      fontSize: 24,
-      fontWeight: "bold",
-      marginBottom: 16,
-      textAlign: "center",
-      color: isDark ? "#fff" : "#000",
+      backgroundColor: isDark ? Colors.dark.background : Colors.light.background,
     },
     notice: {
       fontSize: 14,
       marginBottom: 8,
-      color: isDark ? "#ffcc00" : "#6200ea",
+      color: isDark ? Colors.dark.notice : Colors.light.notice,
       textAlign: "center",
+    },
+    heading: {
+      fontSize: 24,
+      fontWeight: "700",
+      marginBottom: 12,
+      color: isDark ? Colors.dark.text : Colors.light.text,
     },
     daySection: {
       marginBottom: 12,
       padding: 12,
-      backgroundColor: isDark ? "#1e1e1e" : "#f9f9f9",
+      backgroundColor: isDark ? Colors.dark.daySection : Colors.light.daySection,
       borderRadius: 8,
     },
     dayTitle: {
       fontSize: 20,
       fontWeight: "bold",
-      color: isDark ? "#4fc3f7" : "#6200ea",
+      color: isDark ? Colors.dark.dayTitle : Colors.light.dayTitle,
+    },
+    deadlineNote: {
+      fontSize: 12,
+      color: isDark ? Colors.dark.deadlineNote : Colors.light.deadlineNote,
+      marginTop: 4,
     },
     mealSection: {
       marginTop: 10,
@@ -218,46 +260,54 @@ function createStyles(mode: "light" | "dark") {
     mealLabel: {
       fontSize: 16,
       fontWeight: "bold",
-      color: isDark ? "#eee" : "#333",
+      color: isDark ? Colors.dark.mealLabel : Colors.light.mealLabel,
     },
     mealDescription: {
       fontSize: 12,
-      color: isDark ? "#aaa" : "#555",
+      color: isDark ? Colors.dark.mealDescription : Colors.light.mealDescription,
       marginBottom: 2,
     },
     mealPrice: {
       fontSize: 13,
-      color: isDark ? "#ffb74d" : "#444",
+      color: isDark ? Colors.dark.mealPrice : Colors.light.mealPrice,
       fontWeight: "bold",
+    },
+    coupon: {
+      fontSize: 12,
+      color: isDark ? Colors.dark.coupon : Colors.light.coupon,
     },
     counterContainer: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
+      marginLeft: 8,
     },
     counterBtn: {
       fontSize: 20,
       width: 30,
       textAlign: "center",
-      color: isDark ? "#fff" : "#000",
+      color: isDark ? Colors.dark.text : Colors.light.text,
     },
     counterText: {
       fontSize: 16,
       width: 30,
       textAlign: "center",
-      color: isDark ? "#fff" : "#000",
+      color: isDark ? Colors.dark.text : Colors.light.text,
+    },
+    closedLabel: {
+      color: isDark ? Colors.dark.closedLabel : Colors.light.closedLabel,
+      fontWeight: "bold",
     },
     totalContainer: {
       marginTop: 20,
       padding: 12,
-      backgroundColor: isDark ? "#333" : "#eee",
+      backgroundColor: isDark ? Colors.dark.daySection : Colors.light.daySection,
       borderRadius: 12,
       alignItems: "center",
     },
     totalText: {
       fontSize: 16,
       fontWeight: "bold",
-      color: isDark ? "#fff" : "#000",
+      color: isDark ? Colors.dark.text : Colors.light.text,
     },
     submitContainer: {
       marginTop: 16,
