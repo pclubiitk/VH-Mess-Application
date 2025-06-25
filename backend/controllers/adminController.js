@@ -4,6 +4,82 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 
+const uploadMenu = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    }
+
+    const t = await sequelize.transaction();
+
+    try {
+        await MenuItem.update({ is_active: false }, { where: {}, transaction: t });
+
+        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        const rows = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+        const newMenuItems = [];
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const day = row[0];
+
+            if (!day) continue; 
+
+            if (row[1] && row[2]) {
+                newMenuItems.push({
+                    day_of_week: day,
+                    meal_type: 'Breakfast',
+                    description: row[1],
+                    price: parseFloat(row[2]),
+                    is_active: true,
+                });
+            }
+            if (row[3] && row[4]) {
+                newMenuItems.push({
+                    day_of_week: day,
+                    meal_type: 'Lunch',
+                    description: row[3],
+                    price: parseFloat(row[4]),
+                    is_active: true,
+                });
+            }
+            if (row[5] && row[6]) {
+                newMenuItems.push({
+                    day_of_week: day,
+                    meal_type: 'Dinner',
+                    description: row[5],
+                    price: parseFloat(row[6]),
+                    is_active: true,
+                });
+            }
+        }
+        
+        if (newMenuItems.length === 0) {
+            throw new Error('No valid menu items found in the uploaded file.');
+        }
+
+        await MenuItem.bulkCreate(newMenuItems, { transaction: t });
+        await t.commit();
+
+        res.status(201).json({
+            success: true,
+            message: `Successfully uploaded and updated menu with ${newMenuItems.length} items.`,
+        });
+
+    } catch (error) {
+        await t.rollback();
+        console.error('Menu upload failed:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to upload menu.',
+            error: error.message,
+        });
+    }
+};
+
+
 const loginAdmin = async (req, res) => {
     const { username, password } = req.body;
 
@@ -39,53 +115,19 @@ const loginAdmin = async (req, res) => {
     }
 };
 
-const uploadMenu = async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ success: false, message: 'No file uploaded.' });
-    }
-
-    const t = await sequelize.transaction();
-
+const getCurrentAdminMenu = async (req, res) => {
     try {
-        await MenuItem.update(
-            { is_active: false },
-            { where: {}, transaction: t }
-        );
-
-        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const menuData = xlsx.utils.sheet_to_json(worksheet);
-
-        const newMenuItems = menuData.map(item => {
-            if (!item.day_of_week || !item.meal_type || !item.description || !item.price) {
-                throw new Error('Invalid Excel format. Each row must contain day_of_week, meal_type, description, and price.');
-            }
-            return {
-                day_of_week: item.day_of_week,
-                meal_type: item.meal_type,
-                description: item.description,
-                price: parseFloat(item.price),
-                is_active: true,
-            };
+        const menu = await MenuItem.findAll({
+            where: { is_active: true },
+            order: [
+                sequelize.literal("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')"),
+                sequelize.literal("FIELD(meal_type, 'Breakfast', 'Lunch', 'Dinner')")
+            ]
         });
-
-        await MenuItem.bulkCreate(newMenuItems, { transaction: t });
-        await t.commit();
-
-        res.status(201).json({
-            success: true,
-            message: `Successfully uploaded and updated menu with ${newMenuItems.length} items.`,
-        });
-
+        res.json({ success: true, menu });
     } catch (error) {
-        await t.rollback();
-        console.error('Menu upload failed:', error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to upload menu.',
-            error: error.message,
-        });
+        console.error('Error fetching current menu for admin:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 };
 
@@ -179,5 +221,6 @@ module.exports = {
     getTodaysSummary,
     verifyToken,
     markCouponAsUsed,
+    getCurrentAdminMenu
 };
 
