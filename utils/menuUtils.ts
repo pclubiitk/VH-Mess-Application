@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { dummyMenu } from './initMenu';
-
+import { BASE_URL } from  '@/constants/config';
 type MealKey = 'breakfast' | 'lunch' | 'dinner';
 type MealDetails = { description: string; price: number };
 export type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
@@ -43,6 +43,16 @@ export const getWeeklyMenu = async (): Promise<WeeklyMenu> => {
 ////
 
 const fetchWeeklyMenuFromServer = async (): Promise<WeeklyMenu> => {
-  // Replace this dummyMenu call with real menu fetching
-  return new Promise<WeeklyMenu>(resolve => setTimeout(() => resolve(dummyMenu), 500));
+  try {
+    const response = await fetch(`${BASE_URL}/api/menu/current`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data as WeeklyMenu;
+  } catch (error) {
+    console.error('Failed to fetch menu from server:', error);
+ 
+    throw error;
+  }
 };
