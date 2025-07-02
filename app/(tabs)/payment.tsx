@@ -97,7 +97,7 @@ export default function Payment() {
 
     try {
       setBusy(true);
-      const res = await fetch(`${BASE_URL}/create-order`, {
+      const res = await fetch(`${BASE_URL}/api/payment/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: toPay })
@@ -121,7 +121,7 @@ export default function Payment() {
       };
       const data = await RazorpayCheckout.open(options);
       console.log(data);
-      const check = await fetch(`${BASE_URL}/verify-payment`, {
+      const check = await fetch(`${BASE_URL}/api/payment/verify-payment`, {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
           body: JSON.stringify({
