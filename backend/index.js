@@ -1,6 +1,5 @@
+
 //add  backend base api in constant/config.ts
-
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -11,6 +10,7 @@ const { sequelize } = require('./config/database');
 const menuRoutes = require('./routes/menuRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+
 const paymentRoutes = require('./routes/paymentRoutes'); 
 
 const app = express();
@@ -39,6 +39,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payment', paymentRoutes); 
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
