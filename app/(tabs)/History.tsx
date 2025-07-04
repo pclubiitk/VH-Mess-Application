@@ -1,162 +1,140 @@
-//for verification add this dummy data in the locol storage
-
-//'bookingHistory' key
-// [
-//   {
-//     "id": "M001",
-//     "date": "2025‑06‑16",
-//     "meal": "Breakfast",
-//     "cost": 45,
-//     "receiptUrl": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
-//   },
-//   {
-//     "id": "M002",
-//     "date": "2025‑06‑16",
-//     "meal": "Dinner",
-//     "cost": 80,
-//     "receiptUrl": "https://www.africau.edu/images/default/sample.pdf"
-//   },
-//   {
-//     "id": "M003",
-//     "date": "2025‑06‑15",
-//     "meal": "Lunch",
-//     "cost": 65,
-//     "receiptUrl": "https://file-examples.com/storage/fe0f9e1a8d8d6d6b7a6b2e1/2017/10/file-sample_150kB.pdf"
-//   },
-//   {
-//     "id": "M004",
-//     "date": "2025‑06‑14",
-//     "meal": "Snack",
-//     "cost": 30
-//   }
-// ]
 import { Colors } from '@/constants/Colors';
-import { addDummyBookingHistory } from '@/utils/addDummyBookingHistory';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from '@react-navigation/native';
+import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { Asset } from 'expo-asset';
+import * as FileSystem from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-
-
-
 
 type Meal = {
   id: string;
+  day:string;
   date: string;
   meal: string;
+  qty: number;
   cost: number;
   receiptUrl?: string;
   userName?: string;
+  booked:string;
 };
 
 export default function History() {
-  const colorScheme = useTheme().dark;
-  const mode = colorScheme ? 'dark' : 'light';
+  const isDark = useTheme().dark;
+  const mode = isDark ? 'dark' : 'light';
   const styles = createStyles(mode);
 
   const [history, setHistory] = useState<Meal[]>([]);
-  useEffect(() => {
-  addDummyBookingHistory();
-}, []);
+  const logoFallback = require('@/assets/IIT-Kanpur.png');
 
 
-  useEffect(() => {
-    (async () => {
+  // Load real transactions from AsyncStorage
+useFocusEffect(
+  useCallback(() => {
+    const loadData = async () => {
       try {
-        const stored = await AsyncStorage.getItem('bookingHistory');
-        if (stored) setHistory(JSON.parse(stored));
+        const stored = await AsyncStorage.getItem('transactions');
+        if (stored) {
+        const parsed: Meal[] = JSON.parse(stored);
+
+        // Sort: newest date first
+        const sorted = parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        setHistory(sorted);
+        }
       } catch (err) {
         console.error('Failed to load history:', err);
-      }
-    })();
-  }, []);
+      } 
+    };
+    loadData();
+  }, [])
+);
 
-const generatePDFReceipt = async (item: Meal) => {
-  try {
-    const html = `
-    
+  const generatePDFReceipt = async (item: Meal) => {
+    try {
+      const logo = Asset.fromModule(logoFallback).uri;
+      const html = `
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Receipt</title>
+          <title>Meal Coupon Receipt</title>
           <style>
             body {
-              font-family: Arial, sans-serif;
-              background-color: #f8f9fa;
-              padding: 24px;
-              color: #333;
+              font-family: 'Courier New', Courier, monospace;
+              background: #f7f7f7;
+              margin: 0;
+              padding: 0;
             }
             .receipt-box {
-              max-width: 600px;
-              margin: auto;
-              padding: 20px;
-              border: 1px solid #eee;
-              border-radius: 8px;
+              max-width: 380px;
+              margin: 40px auto;
+              padding: 24px 24px 16px 24px;
+              border: 1.5px dashed #333;
               background: #fff;
-              box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+              box-shadow: 0 2px 8px rgba(0,0,0,0.07);
             }
             h1 {
+              font-size: 22px;
               text-align: center;
-              color: #3f51b5;
+              margin: 0 0 12px 0;
+              letter-spacing: 1px;
             }
-            table {
-              width: 100%;
-              line-height: 1.6;
-              margin-top: 20px;
-              font-size: 14px;
-            }
-            th {
-              text-align: left;
-              width: 40%;
-              color: #555;
-              padding-bottom: 6px;
-            }
-            td {
-              padding-bottom: 6px;
+            p {
+              font-size: 13px;
+              margin: 6px 0;
             }
             .footer {
-              margin-top: 32px;
+              margin-top: 18px;
               text-align: center;
-              font-size: 12px;
+              font-size: 11px;
               color: #888;
+              border-top: 1px dashed #bbb;
+              padding-top: 8px;
+              letter-spacing: 0.5px;
+            }
+            .label {
+              color: #555;
+              font-weight: bold;
             }
           </style>
         </head>
         <body>
           <div class="receipt-box">
-            <h1>IITK Mess Receipt</h1>
-            <table>
-              <tr><th>Order ID</th><td>${item.id}</td></tr>
-              <tr><th>Name</th><td>${item.userName || 'Guest'}</td></tr>
-              <tr><th>Date</th><td>${item.date}</td></tr>
-              <tr><th>Meal</th><td>${item.meal}</td></tr>
-              <tr><th>Total Paid</th><td>₹${item.cost}</td></tr>
-            </table>
+            <h1>Meal Coupon</h1>
+            <p><span class="label">Name:</span> ${item.userName || 'Guest'}</p>
+            <p><span class="label">Order ID:</span> ${item.id}</p>
+            <p><span class="label">Booked For:</span> ${item.day} ${item.date} </p>
+            <p><span class="label">Meal:</span> ${item.meal}</p>
+            <p><span class="label">Each Meal Cost:</span> ₹${item.cost}</p>
+            <p><span class="label">Amount Paid:</span> ₹${item.cost*item.qty}</p>
+            <p><span class="label">Booked On:</span> ${item.booked}</p>
             <div class="footer">
-              Thank you for booking with IITK Mess.
+              VH Mess Application • IIT Kanpur
             </div>
           </div>
         </body>
       </html>
-    `;
+      `;
 
-    const file = await Print.printToFileAsync({ html:html ,base64:false });
-    await Sharing.shareAsync(file.uri);
-  } catch (err) {
-    console.error('PDF generation error:', err);
-    Alert.alert('Error', 'Could not generate receipt PDF.');
-  }
-};
+      const file = await Print.printToFileAsync({ html, base64: false });
+      const filename = `${item.date}_${item.meal}_${item.id}.pdf`;
+      const newUri = FileSystem.documentDirectory + filename;
+
+      await FileSystem.moveAsync({ from: file.uri, to: newUri });
+      await Sharing.shareAsync(newUri);
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      Alert.alert('Error', 'Could not generate receipt PDF.');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Booking History</Text>
       <FlatList
         data={history}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => `${item.id}_${item.date}_${item.meal}`}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -165,19 +143,20 @@ const generatePDFReceipt = async (item: Meal) => {
           </Text>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => generatePDFReceipt(item)} style={styles.card}>
+          <TouchableOpacity onPress={() => generatePDFReceipt(item)} style={[styles.card, { borderStyle: 'dashed', borderWidth: 1, borderColor: '#ccc' }]}>
             <View style={styles.row}>
-              <Text style={styles.meal}>{item.meal}</Text>
-              <Text style={styles.cost}>₹{item.cost}</Text>
+              <Text style={styles.meal}>{item.meal.charAt(0).toUpperCase() + item.meal.slice(1,)} Coupon {'\n'} {item.date} </Text>
+              <Text style={styles.cost}>₹{item.cost * item.qty}</Text>
             </View>
-            <Text style={styles.date}>{item.date}</Text>
-            <Text style={styles.id}>ID: {item.id}</Text>
+            <Text style={styles.date}>Bought For: {item.day}</Text>
+            <Text style={styles.id}>Order ID: {item.id}</Text>
           </TouchableOpacity>
         )}
       />
     </View>
   );
 }
+
 function createStyles(mode: 'dark' | 'light') {
   const isDark = mode === 'dark';
   return StyleSheet.create({
