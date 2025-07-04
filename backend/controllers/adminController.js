@@ -185,6 +185,7 @@ const getAllCoupons = async (req, res) => {
 const getTodaysSummary = async (req, res) => {
   try {
     const today = new Date().toISOString().slice(0, 10);
+
     const summary = await PurchasedCoupon.findAll({
       attributes: [
         "meal_type",
@@ -197,6 +198,13 @@ const getTodaysSummary = async (req, res) => {
       group: ["meal_type"],
     });
 
+    const pendingCount = await PurchasedCoupon.count({
+      where: {
+        meal_date: today,
+        status: "Pending",
+      },
+    });
+
     const counts = { Breakfast: 0, Lunch: 0, Dinner: 0 };
     summary.forEach((item) => {
       const mealType = item.get("meal_type");
@@ -205,6 +213,8 @@ const getTodaysSummary = async (req, res) => {
         counts[mealType] = parseInt(count, 10);
       }
     });
+
+    counts.Pending = pendingCount;
 
     res.json({ success: true, summary: counts });
   } catch (error) {
