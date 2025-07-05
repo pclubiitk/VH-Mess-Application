@@ -67,13 +67,13 @@ export default function Payment() {
 
   return resultDate.toISOString().split('T')[0];
 }
-
+  let orderIdFromServer = '';
 
 
 
   const pay=async ()=>{
 
-    const trimmedName = name.trim();
+  const trimmedName = name.trim();
   const trimmedEmail = email.trim();
   const trimmedContact = contact.trim();
 
@@ -101,12 +101,31 @@ export default function Payment() {
       let order;
       try {
         
+        const selections = items.map(it => ({
+          meal_date: getDateFromWeekday(it.day),
+          meal_type: it.meal                     
+        }));
+        const initres = await fetch(`${BASE_URL}/api/payment/initiate-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: name,
+            customerEmail: email,
+            customerPhone: contact,
+            selections,
+          }),
+        });
+
+          const initdata = await initres.json();
+          if (!initres.ok) throw new Error(initdata.message || 'Failed to initiate order.');
+          orderIdFromServer = initdata.order_id;
+          
         const res = await fetch(`${BASE_URL}/api/payment/create-order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: toPay })
         });
-        if (!res.ok) {
+          if (!res.ok) {
           
           const errorText = await res.text();
           console.error('Order creation failed:', errorText);
@@ -149,7 +168,18 @@ export default function Payment() {
         });
         const verified = await check.json();
         if(verified.valid==true){
-            try {
+              try {
+                await fetch(`${BASE_URL}/api/payment/confirm-payment`, {
+                method : 'POST',
+                headers: { 'Content-Type':'application/json' },
+                body   : JSON.stringify({
+                order_id          : orderIdFromServer,
+                payment_id        : data.razorpay_payment_id,
+                transaction_status: 'SUCCESS',
+                }),
+              });
+
+
               const stored = await AsyncStorage.getItem('transactions');
               const prev: BookingEntry[] = stored ? JSON.parse(stored) : [];
 
