@@ -7,6 +7,8 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SvgUri } from 'react-native-svg';
+const empty = require('@/assets/images/empty.svg');
 
 type Meal = {
   id: string;
@@ -138,14 +140,25 @@ useFocusEffect(
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <Text style={{ textAlign: 'center', marginTop: 40, color: mode === 'dark' ? '#aaa' : '#333' }}>
-            No bookings yet.
-          </Text>
+        <View style={{ alignItems: 'center', marginTop: 40 }}>
+      
+          <SvgUri width={150} height={150} uri={Asset.fromModule(empty).uri} />
+          
+       
+        </View>
+
         }
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => generatePDFReceipt(item)} style={[styles.card, { borderStyle: 'dashed', borderWidth: 1, borderColor: '#ccc' }]}>
             <View style={styles.row}>
-              <Text style={styles.meal}>{item.meal.charAt(0).toUpperCase() + item.meal.slice(1,)} Coupon {'\n'} {item.date} </Text>
+              <Text style={styles.meal}>
+                {item.meal.charAt(0).toUpperCase() + item.meal.slice(1)} Coupon{'\n'}
+                {item.date}
+                {'\n'}
+                <Text style={{ fontSize: 13, color: '#888' }}>
+                  {item.qty} coupon{item.qty > 1 ? 's' : ''}
+                </Text>
+              </Text>
               <Text style={styles.cost}>₹{item.cost * item.qty}</Text>
             </View>
             <Text style={styles.date}>Bought For: {item.day}</Text>
