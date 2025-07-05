@@ -94,15 +94,31 @@ export default function Payment() {
     return;
   }
 
+  console.log("djdskjdss")
 
     try {
       setBusy(true);
-      const res = await fetch(`${BASE_URL}/api/payment/create-order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: toPay })
-      });
-      const order= await res.json();
+      let order;
+      try {
+        
+        const res = await fetch(`${BASE_URL}/api/payment/create-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: toPay })
+        });
+        if (!res.ok) {
+          
+          const errorText = await res.text();
+          console.error('Order creation failed:', errorText);
+          throw new Error(`Server error: ${res.status} ${errorText}`);
+        }
+        console.log('Order created successfully');
+        order = await res.json();
+      } catch (fetchError: any) {
+        setBusy(false);
+        Alert.alert('Order Creation Failed', fetchError?.message ?? 'Could not create payment order. Please try again.');
+        return;
+      }
 
       const options = {
         description: 'Payment for booking meals',
@@ -185,30 +201,33 @@ export default function Payment() {
       <View style={styles.card}>
         <Text style={styles.label}>Name:</Text>
         <TextInput
-        style={styles.input}
-        placeholder='Enter Your Name'
-        placeholderTextColor={isDark ? '#aaa' : '#555'}
-        value={name}
-        onChangeText={text => setName(text)}
+          style={styles.input}
+          placeholder='Enter Your Name'
+          placeholderTextColor={isDark ? '#aaa' : '#555'}
+          value={name}
+          onChangeText={text => setName(text)}
         />
         <Text style={styles.label}>Email:</Text>
         <TextInput
-        style={styles.input}
-        placeholder="Enter Your Email"
-        placeholderTextColor={isDark ? '#ccc' : '#555'}
-        value={email}
-        onChangeText={text => setEmail(text)}
+          style={styles.input}
+          placeholder="Enter Your Email"
+          placeholderTextColor={isDark ? '#ccc' : '#555'}
+          value={email}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          onChangeText={text => setEmail(text.toLowerCase())}
         />
-         <Text style={styles.label}>Contact:</Text>
+        <Text style={styles.label}>Contact:</Text>
         <TextInput
-        style={styles.input}
-        placeholder="Enter Your Contact"
-        placeholderTextColor={isDark ? '#aaa' : '#555'}
-        value={contact}
-        onChangeText={text => setContact(text)}
+          style={styles.input}
+          placeholder="Enter Your Contact"
+          placeholderTextColor={isDark ? '#aaa' : '#555'}
+          value={contact}
+          keyboardType="phone-pad"
+          onChangeText={text => setContact(text)}
         />
 
-      <View style={styles.divider} />
+            <View style={styles.divider} />
 
         <Text style={styles.cardTitle}>Order Summary</Text>
 

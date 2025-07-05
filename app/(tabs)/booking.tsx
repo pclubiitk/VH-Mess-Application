@@ -1,7 +1,10 @@
 import { Colors } from '@/constants/Colors';
+import { getWeeklyMenu } from '@/utils/menuUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -50,13 +53,40 @@ export default function BookingScreen() {
   const todayIndex = today.getDay() || 7;
   const todayLabel = dayNames[todayIndex - 1];
   const [expandedDay, setExpandedDay] = useState<string>(todayLabel);
+useFocusEffect(
+  React.useCallback(() => {
+   
+    if (!menuData) return;
+    const initialBookings: Booking = {};
+    for (const day of dayNames) {
+      initialBookings[day] = {
+        breakfast: { qty: 0, price: menuData[day]?.breakfast?.price || 0 },
+        lunch: { qty: 0, price: menuData[day]?.lunch?.price || 0 },
+        dinner: { qty: 0, price: menuData[day]?.dinner?.price || 0 },
+      };
+    }
+    setBookings(initialBookings);
 
-  useEffect(() => {
-    (async () => {
-      const raw = await AsyncStorage.getItem(MENU_KEY);
-      if (raw) setMenuData(JSON.parse(raw));
-    })();
-  }, []);
+
+  }, [menuData])
+);
+
+useEffect(() => {
+  let isActive = true;
+
+  const fetchMenu = async () => {
+    const raw = await getWeeklyMenu();
+    if (!isActive) return;
+    setMenuData(raw as WeeklyMenu);
+  };
+
+  fetchMenu();
+
+  return () => {
+    isActive = false;
+  };
+}, []);
+
 
   useEffect(() => {
     setTimeout(() => {
@@ -198,7 +228,6 @@ const changePeople = (day: string, meal: MealKey, delta: number) => {
                           <Text style={styles.mealLabel}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
                           <Text style={styles.mealDescription}>{details.description}</Text>
                           <Text style={styles.mealPrice}>₹{details.price}</Text>
-                          <Text style={styles.coupon}>{details.coupons} coupon(s)</Text>
                         </View>
                         <View style={{ flex: 1, alignItems: 'center' }}>
                           <Switch
@@ -386,7 +415,7 @@ function createStyles(isDark: boolean) {
       shadowOpacity: 0,
     },
     buttonText: {
-      color: '#fff',
+      color: isDark ? Colors.dark.buttonText : Colors.light.buttonText,
       fontSize: 16,
       fontWeight: '600',
       fontFamily: 'Poppins_600SemiBold',
