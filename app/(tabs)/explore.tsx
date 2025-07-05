@@ -71,7 +71,6 @@ export default function ExploreScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Weekly Menu</Text>
       <View style={{ flex: 1 }}>
         <ScrollView style={{marginBottom: 8,paddingBottom :4}} showsVerticalScrollIndicator={false}>
           {Object.entries(menuData).map(([day, meals]) => (

@@ -94,7 +94,7 @@ export default function Payment() {
     return;
   }
 
-  console.log("djdskjdss")
+  
 
     try {
       setBusy(true);
@@ -105,7 +105,7 @@ export default function Payment() {
           meal_date: getDateFromWeekday(it.day),
           meal_type: it.meal                     
         }));
-        const initres = await fetch(`${BASE_URL}/api/payment/initiate-order`, {
+        const initres = await fetch(`${BASE_URL}/api/coupons/initiate-order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -119,6 +119,7 @@ export default function Payment() {
           const initdata = await initres.json();
           if (!initres.ok) throw new Error(initdata.message || 'Failed to initiate order.');
           orderIdFromServer = initdata.order_id;
+          console.log(initdata.order_id)
           
         const res = await fetch(`${BASE_URL}/api/payment/create-order`, {
           method: 'POST',
@@ -169,7 +170,7 @@ export default function Payment() {
         const verified = await check.json();
         if(verified.valid==true){
               try {
-                await fetch(`${BASE_URL}/api/payment/confirm-payment`, {
+                await fetch(`${BASE_URL}/api/coupons/payment/webhook`, {
                 method : 'POST',
                 headers: { 'Content-Type':'application/json' },
                 body   : JSON.stringify({
