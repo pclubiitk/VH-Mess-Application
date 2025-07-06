@@ -5,8 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-     "dev": "nodemon index.js"
-   
+    "dev": "nodemon index.js"
   },
   "author": "PClub IIT Kanpur",
   "license": "ISC",
@@ -14,22 +13,21 @@
     "nodemon": "^3.1.10"
   },
   "dependencies": {
-  
-    "crypto": "^1.0.1",
-    
-       "axios": "^1.10.0",
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "multer": "^2.0.1",
     "mysql2": "^3.14.1",
     "node-cron": "^4.1.0",
     "nodemon": "^3.1.10",
+    "razorpay": "^2.9.6",
     "sequelize": "^6.37.7",
     "uuid": "^11.1.0",
-    "xlsx": "^0.18.5",
-    "razorpay": "^2.9.6"
+    "xlsx": "^0.18.5"
   }
 }

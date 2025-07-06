@@ -4,7 +4,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
-const path = require('path'); 
+const path = require('path');
+const morgan = require('morgan')
 const { sequelize } = require('./config/database');
 
 const menuRoutes = require('./routes/menuRoutes');
@@ -17,6 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
+app.use(morgan('short'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

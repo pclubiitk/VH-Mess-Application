@@ -133,7 +133,6 @@ useFocusEffect(
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Booking History</Text>
       <FlatList
         data={history}
         keyExtractor={(item) => `${item.id}_${item.date}_${item.meal}`}
@@ -141,10 +140,9 @@ useFocusEffect(
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
         <View style={{ alignItems: 'center', marginTop: 40 }}>
-      
           <SvgUri width={150} height={150} uri={Asset.fromModule(empty).uri} />
-          
-       
+          <Text style={styles.meal}>No Coupons Found</Text>
+          <Text style={styles.row}>Book Now!</Text>
         </View>
 
         }

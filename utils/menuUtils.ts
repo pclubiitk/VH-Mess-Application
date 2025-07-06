@@ -1,16 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { dummyMenu } from './initMenu';
 import { BASE_URL } from '@/constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { WeeklyMenu, MealKey } from './initMenu';
 
-type MealKey = 'breakfast' | 'lunch' | 'dinner';
-type MealDetails = { description: string; price: number };
-export type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
+
 
 const MENU_KEY = 'weeklyMenu';
 const EXPIRY_KEY = 'weeklyMenuExpiry';
 const EXPIRY_DAYS = 3;
 
-export const getWeeklyMenu = async (): Promise<WeeklyMenu> => {
+export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => {
   try {
     const [storedMenu, storedExpiry] = await AsyncStorage.multiGet([
       MENU_KEY,
@@ -34,15 +32,14 @@ export const getWeeklyMenu = async (): Promise<WeeklyMenu> => {
       [MENU_KEY, JSON.stringify(freshMenu)],
       [EXPIRY_KEY, (now + EXPIRY_DAYS * 24 * 60 * 60 * 1000).toString()],
     ]);
-
     return freshMenu;
   } catch (err) {
     console.error('Failed to load weekly menu:', err);
-    return dummyMenu;
+    return null;
   }
 };
 
-const fetchWeeklyMenuFromServer = async (): Promise<WeeklyMenu> => {
+const fetchWeeklyMenuFromServer = async (): Promise<WeeklyMenu | null> => {
   try {
     const response = await fetch(`${BASE_URL}/api/menu/current`);
     if (!response.ok) {
@@ -54,9 +51,7 @@ const fetchWeeklyMenuFromServer = async (): Promise<WeeklyMenu> => {
     if (!data.success || !Array.isArray(data.menu)) {
       throw new Error('Invalid API response structure');
     }
-
     const transformedMenu: WeeklyMenu = {};
-
     data.menu.forEach((item: any) => {
       const {
         day_of_week,
@@ -69,21 +64,13 @@ const fetchWeeklyMenuFromServer = async (): Promise<WeeklyMenu> => {
         description: string;
         price: number;
       } = item;
-
-      if (!transformedMenu[day_of_week]) {
-        transformedMenu[day_of_week] = {
-          breakfast: { description: '', price: 0 },
-          lunch: { description: '', price: 0 },
-          dinner: { description: '', price: 0 },
-        };
-      }
-
+      // To ensure the key exists 
+      transformedMenu[day_of_week] = transformedMenu[day_of_week] || {}; 
       transformedMenu[day_of_week][meal_type] = { description, price };
     });
-
     return transformedMenu;
   } catch (error) {
     console.error('Failed to fetch menu from server:', error);
-    throw error;
+    return null;
   }
 };
