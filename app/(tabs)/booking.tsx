@@ -270,7 +270,7 @@ const changePeople = (day: string, meal: MealKey, delta: number) => {
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, calculateTotalPrice() === 0 && styles.buttonDisabled]}
+            style={[styles.buttonDisabled, calculateTotalPrice() === 0 && styles.button]}
             disabled={calculateTotalPrice() === 0}
             onPress={showConfirmationAlert}
           >
@@ -400,7 +400,7 @@ function createStyles(isDark: boolean) {
       marginTop: 16,
     },
     button: {
-      backgroundColor: '#3399cc',
+      backgroundColor: isDark ? Colors.dark.gray333 : Colors.light.grayeee,
       paddingVertical: 14,
       borderRadius: 10,
       alignItems: 'center',
@@ -413,6 +413,14 @@ function createStyles(isDark: boolean) {
     buttonDisabled: {
       backgroundColor: '#a0a0a0',
       shadowOpacity: 0,
+         paddingVertical: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginVertical: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      
+      shadowRadius: 4,
     },
     buttonText: {
       color: isDark ? Colors.dark.buttonText : Colors.light.buttonText,

@@ -30,7 +30,7 @@ const PAGE_TITLES: Record<string, string> = {
   index: 'Book Now',
   explore: 'Weekly Menu',
   History: 'Booking History',
-  booking: 'Book Room',
+  booking: 'Book Meal',
   payment: 'Payment',
   success: 'Payment Success',
 };

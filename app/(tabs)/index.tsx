@@ -1,10 +1,15 @@
 import { Colors } from '@/constants/Colors';
-import { MealKey, MealDetails, mealImages} from '@/utils/initMenu';
+import { MealKey, MealDetails, mealImages } from '@/utils/initMenu';
 import { getWeeklyMenu } from '@/utils/menuUtils';
 import { useTheme } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { SvgUri } from 'react-native-svg';
+const index = require('@/assets/images/index.svg');
+import { Asset } from 'expo-asset';
+
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -18,27 +23,44 @@ export default function HomeScreen(): React.ReactElement {
   const mode = colorScheme ? 'dark' : 'light';
   const styles = useMemo(() => createStyles(mode), [mode]);
   const router = useRouter();
-  const [todayMeals, setTodayMeals] = useState<Record<MealKey, MealDetails> | null>(null);
 
-  useEffect(()=>{
+  const [todayMeals, setTodayMeals] = useState<Record<MealKey, MealDetails> | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
     loadTodayMeals();
   }, []);
-    const loadTodayMeals = async () => {
+
+  const loadTodayMeals = async () => {
     try {
+      setLoading(true);
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
       const menu = await getWeeklyMenu();
       menu ? setTodayMeals(menu[today as keyof typeof menu]) : setTodayMeals(null);
     } catch (error) {
       console.error('Error loading menu in HomeScreen:', error);
+      setTodayMeals(null);
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large"/>
+        <Text style={{ marginTop: 16, color: Colors[mode].text }}>Loading today's menu...</Text>
+      </View>
+    );
+  }
+
   if (!todayMeals || Object.keys(todayMeals).length === 0) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.cardHeading}>Sorry, can not fetch current menu</Text>
-         {/* add a button here to refetch the menu.*/}
-         {!todayMeals} <Text style={styles.description}>Please try again later</Text>
+      <View style={{ alignItems: 'center', marginTop: 40 }}>
+        <SvgUri width={150} height={150} uri={Asset.fromModule(index).uri} />
+        <Text style={styles.cardHeading}>Sorry, can't fetch current menu</Text>
+        <Text style={styles.description}>Please try again later</Text>
+     
       </View>
     );
   }
@@ -64,24 +86,25 @@ export default function HomeScreen(): React.ReactElement {
         ))}
 
         <View style={styles.card}>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.cardHeading,{ textAlign: 'center' }]}>Plan Ahead for Your Meals</Text>
-        <Text style={[styles.description,{ textAlign: 'center' }]}>
-          You can book breakfast, lunch, or dinner in advance for any day of the week.
-          Avoid last-minute hassle and ensure availability!
-        </Text>
-        <TouchableOpacity
-        style={styles.fullButton}
-        onPress={() => router.push('/(tabs)/booking')}
-      >
-        <Text style={styles.buttonText}>Book for Other Days</Text>
-      </TouchableOpacity>
-      </View>
-    </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.cardHeading, { textAlign: 'center' }]}>Plan Ahead for Your Meals</Text>
+            <Text style={[styles.description, { textAlign: 'center' }]}>
+              You can book breakfast, lunch, or dinner in advance for any day of the week.
+              Avoid last-minute hassle and ensure availability!
+            </Text>
+            <TouchableOpacity
+              style={styles.fullButton}
+              onPress={() => router.push('/(tabs)/booking')}
+            >
+              <Text style={styles.buttonText}>Book for Other Days</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
 }
+
 
 function createStyles(mode: 'light' | 'dark') {
   const isDark = mode === 'dark';

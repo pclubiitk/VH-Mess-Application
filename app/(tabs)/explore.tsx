@@ -18,6 +18,10 @@ import { getWeeklyMenu} from '@/utils/menuUtils';
 import { WeeklyMenu, MealDetails, mealImages, MealKey } from '@/utils/initMenu';
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
+import { SvgUri } from 'react-native-svg';
+const index = require('@/assets/images/index.svg');
+import { Asset } from 'expo-asset';
+
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 
@@ -52,7 +56,8 @@ export default function ExploreScreen() {
 
   if (!menuData || Object.keys(menuData).length === 0) {
     return (
-      <View style={styles.container}>
+         <View style={{ alignItems: 'center', marginTop: 40 }}>
+        <SvgUri width={150} height={150} uri={Asset.fromModule(index).uri} />
         <Text style={styles.heading}>No menu found</Text>
       </View>
     );

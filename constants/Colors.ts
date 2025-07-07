@@ -13,7 +13,7 @@ export const Colors = {
     notice: '#cc0033',            // notice color
     heading: '#000',              // heading color
     daySection: '#f9f9f9',        // daySection background
-    dayTitle: '#6200ea',          // dayTitle color
+    dayTitle: 'black',          // dayTitle color
     deadlineNote: 'red',          // deadlineNote color
     mealLabel: '#333',            // mealLabel color
     mealDescription: '#555',      // mealDescription color
@@ -74,7 +74,7 @@ export const Colors = {
     notice: '#ff6666',            // notice color
     heading: '#fff',              // heading color
     daySection: '#1e1e1e',        // daySection background
-    dayTitle: '#4fc3f7',          // dayTitle color
+    dayTitle: 'white',          // dayTitle color
     deadlineNote: 'red',          // deadlineNote color
     mealLabel: '#eee',            // mealLabel color
     mealDescription: '#aaa',      // mealDescription color

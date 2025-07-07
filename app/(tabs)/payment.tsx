@@ -119,7 +119,7 @@ export default function Payment() {
           const initdata = await initres.json();
           if (!initres.ok) throw new Error(initdata.message || 'Failed to initiate order.');
           orderIdFromServer = initdata.order_id;
-          console.log(initdata.order_id)
+        
           
         const res = await fetch(`${BASE_URL}/api/payment/create-order`, {
           method: 'POST',
@@ -132,7 +132,7 @@ export default function Payment() {
           console.error('Order creation failed:', errorText);
           throw new Error(`Server error: ${res.status} ${errorText}`);
         }
-        console.log('Order created successfully');
+
         order = await res.json();
       } catch (fetchError: any) {
         setBusy(false);
@@ -156,7 +156,7 @@ export default function Payment() {
         theme: { color: '#3399cc' }
       };
       const data = await RazorpayCheckout.open(options);
-      console.log(data);
+
       const check = await fetch(`${BASE_URL}/api/payment/verify-payment`, {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
