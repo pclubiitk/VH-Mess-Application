@@ -60,7 +60,18 @@ export default function HomeScreen(): React.ReactElement {
         <SvgUri width={150} height={150} uri={Asset.fromModule(index).uri} />
         <Text style={styles.cardHeading}>Sorry, can't fetch current menu</Text>
         <Text style={styles.description}>Please try again later</Text>
-     
+       <TouchableOpacity
+    onPress={loadTodayMeals}
+    style={{
+      marginTop: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      backgroundColor: '#007AFF',
+      borderRadius: 8,
+    }}
+  >
+    <Text style={{ color: 'white', fontWeight: 'bold' }}>Retry</Text>
+  </TouchableOpacity>
       </View>
     );
   }

@@ -4,7 +4,7 @@ import { SvgUri } from 'react-native-svg';
 import { Asset } from 'expo-asset';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-const a = require('@/assets/images/404.svg');
+const a = require('@/assets/images/NotFound.svg');
 
 
 export default function NotFoundScreen() {
