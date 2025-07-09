@@ -114,15 +114,34 @@ useEffect(() => {
     return dt < today;
   };
 
-  const isMealOpen = (day: string, meal: MealKey) => {
-    if (day !== todayLabel) return true;
-    const now = new Date();
-    const h = now.getHours(), m = now.getMinutes();
-    if (meal === 'breakfast') return h < 6;
-    if (meal === 'lunch') return h < 12 || (h === 11 && m <= 59);
-    if (meal === 'dinner') return h < 18;
-    return true;
-  };
+  const CUT_OFF: Record<MealKey, { hour: number; minute: number }> = {
+  breakfast: { hour: 6, minute: 0 },
+  lunch: { hour: 12, minute: 0 },
+  dinner: { hour: 18, minute: 0 },
+};
+
+const isMealOpen = (day: string, meal: string): boolean => {
+  const normalizedMeal = meal.toLowerCase() as MealKey;
+
+  const now = new Date();
+
+
+  const currentDay = dayNames[(now.getDay() || 7) - 1];
+  if (day !== currentDay) return true;
+
+  const cutoff = CUT_OFF[normalizedMeal];
+  if (!cutoff) {
+    console.warn(` Invalid meal key: "${meal}"`);
+    return false;
+  }
+
+  const { hour, minute } = cutoff;
+  const h = now.getHours();
+  const m = now.getMinutes();
+
+  return h < hour || (h === hour && m < minute);
+};
+
 
   const toggleMeal = (day: string, meal: MealKey) => {
   if (isPastDay(day) || !isMealOpen(day, meal)) {
