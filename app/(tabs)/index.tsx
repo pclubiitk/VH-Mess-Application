@@ -20,6 +20,15 @@ export default function HomeScreen(): React.ReactElement {
   const router = useRouter();
   const [todayMeals, setTodayMeals] = useState<Record<MealKey, MealDetails> | null>(null);
 
+
+  const isMealOpen = (meal: MealKey) => {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes();
+    if (meal === 'Breakfast') return h < 6;
+    if (meal === 'Lunch') return h < 12 || (h === 11 && m <= 59);
+    if (meal === 'Dinner') return h < 18;
+    return true;
+  };
   useEffect(()=>{
     loadTodayMeals();
   }, []);
@@ -31,6 +40,7 @@ export default function HomeScreen(): React.ReactElement {
     } catch (error) {
       console.error('Error loading menu in HomeScreen:', error);
     }
+    
   };
 
   if (!todayMeals || Object.keys(todayMeals).length === 0) {
@@ -49,14 +59,11 @@ export default function HomeScreen(): React.ReactElement {
         {(Object.keys(todayMeals) as MealKey[]).map((mealKey, idx) => (
           <View key={idx} style={styles.card}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardHeading}>{mealKey.charAt(0).toUpperCase() + mealKey.slice(1)}</Text>
+              <Text style={styles.cardHeading}>{mealKey}</Text>
               <Text style={styles.price}>₹{todayMeals[mealKey].price}</Text>
               <Text style={styles.desc}>{todayMeals[mealKey].description}</Text>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => router.push('/(tabs)/booking')}
-              >
-                <Text style={styles.buttonText}>Book Now →</Text>
+              <TouchableOpacity style={styles.button} disabled ={!isMealOpen(mealKey)} onPress={() => router.push({ pathname: '/(tabs)/booking', params: { selectedMeal: mealKey } })}>
+                <Text style={isMealOpen(mealKey)? styles.buttonText: styles.disablebuttonText}>{isMealOpen(mealKey) ? "Book Now →": "Not Available Now"}</Text>
               </TouchableOpacity>
             </View>
             <Image source={mealImages[mealKey]} style={styles.image} />
@@ -154,6 +161,11 @@ function createStyles(mode: 'light' | 'dark') {
     },
     buttonText: {
       color: isDark ? Colors.dark.text : Colors.light.text,
+      fontSize: 14,
+      fontFamily: 'Poppins_600SemiBold',
+    },
+    disablebuttonText: {
+      color: "#B00020",
       fontSize: 14,
       fontFamily: 'Poppins_600SemiBold',
     },

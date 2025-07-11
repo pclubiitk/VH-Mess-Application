@@ -11,7 +11,7 @@ import { SvgUri } from 'react-native-svg';
 const empty = require('@/assets/images/empty.svg');
 
 type Meal = {
-  id: string;
+  orderid: string,
   day:string;
   date: string;
   meal: string;
@@ -31,7 +31,6 @@ export default function History() {
   const logoFallback = require('@/assets/IIT-Kanpur.png');
 
 
-  // Load real transactions from AsyncStorage
 useFocusEffect(
   useCallback(() => {
     const loadData = async () => {
@@ -105,7 +104,7 @@ useFocusEffect(
           <div class="receipt-box">
             <h1>Meal Coupon</h1>
             <p><span class="label">Name:</span> ${item.userName || 'Guest'}</p>
-            <p><span class="label">Order ID:</span> ${item.id}</p>
+            <p><span class="label">Order ID:</span> ${item.orderid}</p>
             <p><span class="label">Booked For:</span> ${item.day} ${item.date} </p>
             <p><span class="label">Meal:</span> ${item.meal}</p>
             <p><span class="label">Each Meal Cost:</span> ₹${item.cost}</p>
@@ -120,7 +119,7 @@ useFocusEffect(
       `;
 
       const file = await Print.printToFileAsync({ html, base64: false });
-      const filename = `${item.date}_${item.meal}_${item.id}.pdf`;
+      const filename = `${item.date}_${item.meal}_${item.orderid}.pdf`;
       const newUri = FileSystem.documentDirectory + filename;
 
       await FileSystem.moveAsync({ from: file.uri, to: newUri });
@@ -135,7 +134,7 @@ useFocusEffect(
     <View style={styles.container}>
       <FlatList
         data={history}
-        keyExtractor={(item) => `${item.id}_${item.date}_${item.meal}`}
+        keyExtractor={(item) => `${item.orderid}_${item.date}_${item.meal}`}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -160,7 +159,7 @@ useFocusEffect(
               <Text style={styles.cost}>₹{item.cost * item.qty}</Text>
             </View>
             <Text style={styles.date}>Bought For: {item.day}</Text>
-            <Text style={styles.id}>Order ID: {item.id}</Text>
+            <Text style={styles.id}>Order ID: {item.orderid}</Text>
           </TouchableOpacity>
         )}
       />

@@ -62,6 +62,15 @@ cron.schedule('0 1 * * *', () => {
 
 console.log('Scheduled daily cleanup job to run at 1:00 AM.');
 
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    uptime: process.uptime(),
+    dbConnected: isDbConnected,
+    timestamp: new Date(),
+  });
+});
+
 const startServer = async () => {
     isDbConnected = await connectToDatabase();
 

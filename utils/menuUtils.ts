@@ -57,12 +57,12 @@ const fetchWeeklyMenuFromServer = async (): Promise<WeeklyMenu | null> => {
         day_of_week,
         meal_type,
         description,
-        price,
+        price
       }: {
         day_of_week: string;
         meal_type: MealKey;
         description: string;
-        price: number;
+        price: string;
       } = item;
       // To ensure the key exists 
       transformedMenu[day_of_week] = transformedMenu[day_of_week] || {}; 
