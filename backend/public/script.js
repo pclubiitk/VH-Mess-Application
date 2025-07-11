@@ -422,7 +422,8 @@ const checkLoginStatus = async () => {
     if (response.ok) {
       showView("dashboard");
       setActiveTab("coupons");
-      fetchTodaysSummary();
+      await fetchTodaysSummary();             // ✅ today's counts
+      await fetchUpcomingSummaryData();
       document.getElementById("date-filter").value = new Date()
         .toISOString()
         .slice(0, 10);
@@ -448,3 +449,47 @@ tabUpload.addEventListener("click", () => setActiveTab("upload"));
 menuFileInput.addEventListener("change", handleFileSelect);
 finalUploadBtn.addEventListener("click", handleFinalUpload);
 document.addEventListener("DOMContentLoaded", checkLoginStatus);
+
+const fetchUpcomingSummaryData = async () => {
+ const token = localStorage.getItem("authToken");
+  const today = new Date().toISOString().split("T")[0];
+  const hour = new Date().getHours();
+  let upcomingMeal = "Dinner";
+  if (hour < 10) upcomingMeal = "Breakfast";
+  else if (hour < 16) upcomingMeal = "Lunch";
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/coupons/all?date=${today}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+
+    const coupons = data.coupons || [];
+    const filtered = coupons.filter(
+      (c) =>
+        c.meal_type === upcomingMeal &&
+        (c.status === "Active" || c.status === "Pending")
+    );
+
+    const summary = { Active: 0, Pending: 0 };
+    filtered.forEach((c) => {
+      summary[c.status] = (summary[c.status] || 0) + 1;
+    });
+
+    // Clear old upcoming summary (only the purple card)
+    const existingCards = couponSummary.querySelectorAll(".bg-purple-50");
+    existingCards.forEach((el) => el.remove());
+
+    const extraSummaryHTML = `
+      <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <p class="text-sm text-purple-800 font-medium">Upcoming: ${upcomingMeal}</p>
+          <p class="text-lg text-purple-700 font-semibold">Active: ${summary.Active}</p>
+          <p class="text-lg text-purple-700 font-semibold">Pending: ${summary.Pending}</p>
+      </div>`;
+    couponSummary.insertAdjacentHTML("beforeend", extraSummaryHTML);
+  } catch (err) {
+    console.error("Upcoming meal summary fetch failed:", err.message);
+  }
+};
