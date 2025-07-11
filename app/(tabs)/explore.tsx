@@ -14,30 +14,20 @@
 
 
 import { Colors } from '@/constants/Colors';
-import { getWeeklyMenu, WeeklyMenu } from '@/utils/menuUtils';
+import { getWeeklyMenu} from '@/utils/menuUtils';
+import { WeeklyMenu, MealDetails, mealImages, MealKey } from '@/utils/initMenu';
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-type MealKey = 'Breakfast' | 'Lunch' | 'Dinner';
-// type MealDetails = { description: string; price: number; };
-// type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
 
 export default function ExploreScreen() {
-
   const colorScheme = useTheme().dark;
   const mode = colorScheme ? 'dark' : 'light';
   const styles = useMemo(() => createStyles(mode), [mode]);
   const [menuData, setMenuData] = useState<WeeklyMenu | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  const mealImages = {
-  Breakfast: require('../../assets/images/breakfast.jpg'),
-  Lunch: require('../../assets/images/lunch.jpg'),
-  Dinner: require('../../assets/images/dinner.jpg'),
-  };
 
-  
   useEffect(() => {
     loadMenu();
   }, []);
@@ -52,7 +42,6 @@ export default function ExploreScreen() {
       setLoading(false);
     }
   };
-  
  if (loading) {
     return (
       <View style={styles.container}>
@@ -76,7 +65,6 @@ export default function ExploreScreen() {
           {Object.entries(menuData).map(([day, meals]) => (
             <View key={day} style={styles.card}>
               <Text style={styles.day}>{day}</Text>
-
               {(['Breakfast', 'Lunch', 'Dinner'] as MealKey[]).map(
                 (mealKey, idx) => (
                   <React.Fragment key={mealKey}>

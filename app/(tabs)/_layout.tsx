@@ -27,9 +27,9 @@ import {
 
 // Map route names to readable titles
 const PAGE_TITLES: Record<string, string> = {
-  index: 'Home',
+  index: 'Book Now',
   explore: 'Weekly Menu',
-  History: 'Payment History',
+  History: 'Booking History',
   booking: 'Book Room',
   payment: 'Payment',
   success: 'Payment Success',
@@ -81,7 +81,7 @@ export default function TabLayout() {
               alignItems: 'center',
               justifyContent: 'space-between',
               paddingHorizontal: 16,
-              marginBottom: 5,
+              marginTop: 10,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -142,7 +142,7 @@ export default function TabLayout() {
             <Tabs.Screen
               name="index"
               options={{
-                title: 'Home',
+                title: 'Book Now',
                 tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
               }}
             />
@@ -156,7 +156,7 @@ export default function TabLayout() {
             <Tabs.Screen
               name="History"
               options={{
-                title: 'Payment History',
+                title: 'Booking History',
                 tabBarIcon: ({ color }) => (
                   <IconSymbol size={28} name="clock.arrow.circlepath" color={color} />
                 ),

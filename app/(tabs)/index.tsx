@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { MealKey } from '@/utils/initMenu';
+import { MealKey, MealDetails, mealImages} from '@/utils/initMenu';
 import { getWeeklyMenu } from '@/utils/menuUtils';
 import { useTheme } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -13,20 +13,12 @@ import {
   View
 } from 'react-native';
 
-
-
-const mealImages = {
-  Breakfast: require('../../assets/images/breakfast.jpg'),
-  Lunch: require('../../assets/images/lunch.jpg'),
-  Dinner: require('../../assets/images/dinner.jpg'),
-};
-
 export default function HomeScreen(): React.ReactElement {
   const colorScheme = useTheme().dark;
   const mode = colorScheme ? 'dark' : 'light';
   const styles = useMemo(() => createStyles(mode), [mode]);
   const router = useRouter();
-  const [todayMeals, setTodayMeals] = useState<Record<MealKey, { description: string; price: number }> | null>(null);
+  const [todayMeals, setTodayMeals] = useState<Record<MealKey, MealDetails> | null>(null);
 
 
   const isMealOpen = (meal: MealKey) => {
@@ -44,25 +36,25 @@ export default function HomeScreen(): React.ReactElement {
     try {
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
       const menu = await getWeeklyMenu();
-      setTodayMeals(menu[today as keyof typeof menu]);
+      menu ? setTodayMeals(menu[today as keyof typeof menu]) : setTodayMeals(null);
     } catch (error) {
       console.error('Error loading menu in HomeScreen:', error);
     }
     
   };
-    
 
-  if (!todayMeals) {
+  if (!todayMeals || Object.keys(todayMeals).length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.heading}>Loading today's menu...</Text>
+        <Text style={styles.cardHeading}>Sorry, can not fetch current menu</Text>
+         {/* add a button here to refetch the menu.*/}
+         {!todayMeals} <Text style={styles.description}>Please try again later</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Today's Menu</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
         {(Object.keys(todayMeals) as MealKey[]).map((mealKey, idx) => (
           <View key={idx} style={styles.card}>
@@ -92,8 +84,6 @@ export default function HomeScreen(): React.ReactElement {
         <Text style={styles.buttonText}>Book for Other Days</Text>
       </TouchableOpacity>
       </View>
-
-      
     </View>
       </ScrollView>
     </View>
