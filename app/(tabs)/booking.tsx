@@ -17,11 +17,11 @@ import {
   findNodeHandle
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MealKey } from '@/utils/initMenu';
 
 const MENU_KEY = 'weeklyMenu';
 const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-type MealKey = 'Breakfast' | 'Lunch' | 'Dinner';
 type MealDetails = { description: string; price: number; coupons: number };
 type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
 type Booking = Record<string, Record<MealKey, { qty: number; price: number }>>;
