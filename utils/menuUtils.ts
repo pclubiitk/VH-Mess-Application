@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { dummyMenu } from './initMenu';
 import { BASE_URL } from '@/constants/config';
 
-type MealKey = 'breakfast' | 'lunch' | 'dinner';
+type MealKey = 'Breakfast' | 'Lunch' | 'Dinner';
 type MealDetails = { description: string; price: number };
 export type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
 
@@ -11,6 +11,7 @@ const EXPIRY_KEY = 'weeklyMenuExpiry';
 const EXPIRY_DAYS = 3;
 
 export const getWeeklyMenu = async (): Promise<WeeklyMenu> => {
+
   try {
     const [storedMenu, storedExpiry] = await AsyncStorage.multiGet([
       MENU_KEY,
@@ -38,6 +39,7 @@ export const getWeeklyMenu = async (): Promise<WeeklyMenu> => {
     return freshMenu;
   } catch (err) {
     console.error('Failed to load weekly menu:', err);
+    console.log("showing dummyMenu");
     return dummyMenu;
   }
 };
@@ -62,23 +64,23 @@ const fetchWeeklyMenuFromServer = async (): Promise<WeeklyMenu> => {
         day_of_week,
         meal_type,
         description,
-        price,
+        price
       }: {
         day_of_week: string;
         meal_type: MealKey;
         description: string;
-        price: number;
+        price: string;
       } = item;
 
       if (!transformedMenu[day_of_week]) {
         transformedMenu[day_of_week] = {
-          breakfast: { description: '', price: 0 },
-          lunch: { description: '', price: 0 },
-          dinner: { description: '', price: 0 },
+          Breakfast: { description: '', price: 0 },
+          Lunch: { description: '', price: 0 },
+          Dinner: { description: '', price: 0 },
         };
       }
 
-      transformedMenu[day_of_week][meal_type] = { description, price };
+      transformedMenu[day_of_week][meal_type] = { description, price: parseFloat(price), };
     });
 
     return transformedMenu;

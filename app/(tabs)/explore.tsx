@@ -19,7 +19,7 @@ import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-type MealKey = 'breakfast' | 'lunch' | 'dinner';
+type MealKey = 'Breakfast' | 'Lunch' | 'Dinner';
 // type MealDetails = { description: string; price: number; };
 // type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
 
@@ -32,9 +32,9 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   
   const mealImages = {
-  breakfast: require('../../assets/images/breakfast.jpg'),
-  lunch: require('../../assets/images/lunch.jpg'),
-  dinner: require('../../assets/images/dinner.jpg'),
+  Breakfast: require('../../assets/images/breakfast.jpg'),
+  Lunch: require('../../assets/images/lunch.jpg'),
+  Dinner: require('../../assets/images/dinner.jpg'),
   };
 
   
@@ -77,11 +77,11 @@ export default function ExploreScreen() {
             <View key={day} style={styles.card}>
               <Text style={styles.day}>{day}</Text>
 
-              {(['breakfast', 'lunch', 'dinner'] as MealKey[]).map(
+              {(['Breakfast', 'Lunch', 'Dinner'] as MealKey[]).map(
                 (mealKey, idx) => (
                   <React.Fragment key={mealKey}>
                     <View style={styles.row}>
-                      <Image source={mealKey=='breakfast'? mealImages.breakfast: mealKey=='lunch' ? mealImages.lunch: mealImages.dinner}style={styles.image}>                      
+                      <Image source={mealKey=='Breakfast'? mealImages.Breakfast: mealKey=='Lunch' ? mealImages.Lunch: mealImages.Dinner}style={styles.image}>                      
                     </Image>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.label}>

@@ -18,8 +18,8 @@ import {
 type Item = { day: string; meal: string; qty: number };
 
 export default function Success() {
-  const { paymentId, items = '[]', total = '0' } =
-    useLocalSearchParams<{ paymentId: string; items: string; total: string }>();
+  const {orderID, paymentId, items = '[]', total = '0' } =
+    useLocalSearchParams<{ orderID: string ; paymentId: string; items: string; total: string }>();
 
   const itemArr: Item[] = JSON.parse(items);
 
@@ -117,6 +117,7 @@ export default function Success() {
     <div class="receipt-box">
       <h1>Payment Receipt</h1>
 
+      <p><span class="label">Order ID:</span> ${orderID}</p>
       <p><span class="label">Transaction ID:</span> ${paymentId}</p>
       <p><span class="label">Date:</span> ${new Date().toLocaleDateString()}</p>
 

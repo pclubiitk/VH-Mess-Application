@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { getWeeklyMenu } from '@/utils/menuUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -21,7 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const MENU_KEY = 'weeklyMenu';
 const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-type MealKey = 'breakfast' | 'lunch' | 'dinner';
+type MealKey = 'Breakfast' | 'Lunch' | 'Dinner';
 type MealDetails = { description: string; price: number; coupons: number };
 type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
 type Booking = Record<string, Record<MealKey, { qty: number; price: number }>>;
@@ -40,6 +40,7 @@ export default function BookingScreen() {
   const styles = useMemo(() => createStyles(isDark), [isDark]);
   const router = useRouter();
   const navigation = useNavigation();
+  const { selectedMeal } = useLocalSearchParams();
 
   const scrollViewRef = useRef<ScrollView>(null);
   const dayRefs = useRef<Record<string, React.RefObject<View>>>(
@@ -60,13 +61,16 @@ useFocusEffect(
     const initialBookings: Booking = {};
     for (const day of dayNames) {
       initialBookings[day] = {
-        breakfast: { qty: 0, price: menuData[day]?.breakfast?.price || 0 },
-        lunch: { qty: 0, price: menuData[day]?.lunch?.price || 0 },
-        dinner: { qty: 0, price: menuData[day]?.dinner?.price || 0 },
+        Breakfast: { qty: 0, price: menuData[day]?.Breakfast?.price || 0 },
+        Lunch: { qty: 0, price: menuData[day]?.Lunch?.price || 0 },
+        Dinner: { qty: 0, price: menuData[day]?.Dinner?.price || 0 },
       };
     }
     setBookings(initialBookings);
-
+    if (selectedMeal && dayNames.includes(todayLabel)) {
+    toggleMeal(todayLabel, selectedMeal as MealKey);
+    setExpandedDay(todayLabel);
+  }
 
   }, [menuData])
 );
@@ -77,7 +81,7 @@ useEffect(() => {
   const fetchMenu = async () => {
     const raw = await getWeeklyMenu();
     if (!isActive) return;
-    setMenuData(raw as WeeklyMenu);
+    setMenuData(raw as unknown as WeeklyMenu);
   };
 
   fetchMenu();
@@ -89,16 +93,15 @@ useEffect(() => {
 
 
   useEffect(() => {
-    setTimeout(() => {
-      const ref = dayRefs.current[todayLabel];
-      ref?.current?.measureLayout(
-        findNodeHandle(scrollViewRef.current) as number,
-        (x: number, y: number) => {
-          scrollViewRef.current?.scrollTo({ y, animated: true });
-        },
-        () => console.warn('measureLayout error')
-      );
-    }, 300);
+    const timeout = setTimeout(() => {
+    const ref = dayRefs.current[todayLabel];
+
+    ref?.current?.measure((x, y, width, height, pageX, pageY) => {
+      scrollViewRef.current?.scrollTo({ y: pageY - 100, animated: true });
+    });
+  }, 500);
+
+  return () => clearTimeout(timeout);
   }, []);
 
   const daysOfThisWeek = dayNames.filter((_, idx) => {
@@ -118,9 +121,9 @@ useEffect(() => {
     if (day !== todayLabel) return true;
     const now = new Date();
     const h = now.getHours(), m = now.getMinutes();
-    if (meal === 'breakfast') return h < 6;
-    if (meal === 'lunch') return h < 12 || (h === 11 && m <= 59);
-    if (meal === 'dinner') return h < 18;
+    if (meal === 'Breakfast') return h < 6;
+    if (meal === 'Lunch') return h < 12 || (h === 11 && m <= 59);
+    if (meal === 'Dinner') return h < 18;
     return true;
   };
 
@@ -225,7 +228,7 @@ const changePeople = (day: string, meal: MealKey, delta: number) => {
                     return (
                       <View key={meal} style={styles.mealRow}>
                         <View style={{ flex: 2 }}>
-                          <Text style={styles.mealLabel}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
+                          <Text style={styles.mealLabel}>{meal}</Text>
                           <Text style={styles.mealDescription}>{details.description}</Text>
                           <Text style={styles.mealPrice}>₹{details.price}</Text>
                         </View>
@@ -252,7 +255,7 @@ const changePeople = (day: string, meal: MealKey, delta: number) => {
                           ) : !open && isToday ? (
                             <Text numberOfLines={1} style={styles.closedLabel}>Closed</Text>
                           ) : null}
-                        </View>
+                        </View>                        
                       </View>
                     );
                   })}

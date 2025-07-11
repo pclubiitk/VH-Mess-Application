@@ -1,6 +1,6 @@
 // utils/initMenu.ts
 
-export type MealKey = 'breakfast' | 'lunch' | 'dinner';
+export type MealKey = 'Breakfast' | 'Lunch' | 'Dinner';
 
 export interface DayMeal {
   description: string;
@@ -9,99 +9,99 @@ export interface DayMeal {
 
 export const dummyMenu: Record<string, Record<MealKey, DayMeal>> = {
   Monday: {
-    breakfast: {
+    Breakfast: {
       description: "Idli with coconut chutney and sambar.",
       price: 40,
     },
-    lunch: {
+    Lunch: {
       description: "Rice with rasam, curry, and curd.",
       price: 70,
     },
-    dinner: {
+    Dinner: {
       description: "Chapati with veg kurma.",
       price: 60,
     },
   },
   Tuesday: {
-    breakfast: {
+    Breakfast: {
       description: "Poha with lemon and peanuts.",
       price: 35,
     },
-    lunch: {
+    Lunch: {
       description: "Rajma rice and salad.",
       price: 75,
     },
-    dinner: {
+    Dinner: {
       description: "Paratha with curd and pickle.",
       price: 65,
     },
   },
   Wednesday: {
-    breakfast: {
+    Breakfast: {
       description: "Aloo paratha with butter.",
       price: 45,
     },
-    lunch: {
+    Lunch: {
       description: "Paneer curry with naan.",
       price: 80,
     },
-    dinner: {
+    Dinner: {
       description: "Tomato rice with chips.",
       price: 60,
     },
   },
   Thursday: {
-    breakfast: {
+    Breakfast: {
       description: "Uttapam with sambar and chutney.",
       price: 40,
     },
-    lunch: {
+    Lunch: {
       description: "Dal fry with jeera rice.",
       price: 70,
     },
-    dinner: {
+    Dinner: {
       description: "Veg biryani with raita.",
       price: 75,
     },
   },
   Friday: {
-    breakfast: {
+    Breakfast: {
       description: "Bread butter and boiled egg.",
       price: 35,
     },
-    lunch: {
+    Lunch: {
       description: "Chole bhature and salad.",
       price: 80,
     },
-    dinner: {
+    Dinner: {
       description: "Dosa with potato masala.",
       price: 60,
     },
   },
   Saturday: {
-    breakfast: {
+    Breakfast: {
       description: "Cornflakes with milk.",
       price: 30,
     },
-    lunch: {
+    Lunch: {
       description: "Mixed veg with rice and papad.",
       price: 70,
     },
-    dinner: {
+    Dinner: {
       description: "Pulao with veg curry.",
       price: 65,
     },
   },
   Sunday: {
-    breakfast: {
+    Breakfast: {
       description: "Pancakes with honey and banana.",
       price: 50,
     },
-    lunch: {
+    Lunch: {
       description: "Special thali with curries, rice, dessert.",
       price: 90,
     },
-    dinner: {
+    Dinner: {
       description: "Chinese noodles and spring roll.",
       price: 85,
     },

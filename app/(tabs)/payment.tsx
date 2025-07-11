@@ -3,7 +3,7 @@ import { BASE_URL, RAZORPAY_KEY_ID } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import RazorpayCheckout from 'react-native-razorpay';
 
@@ -53,6 +53,34 @@ export default function Payment() {
   const [contact, setContact] = useState('');
 
 
+  useEffect(() => {
+    const loadFormData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem('user_form_data');
+        if (storedData) {
+          const { name, email, contact } = JSON.parse(storedData);
+          setName(name);
+          setEmail(email);
+          setContact(contact);
+        }
+      } catch (error) {
+        console.error('Error loading form data:', error);
+      }
+    };
+
+    loadFormData();
+  }, []);
+
+  const saveUserData = async (email:string, name:string, contact:string) => {
+    try {
+       const formData = JSON.stringify({ email, name, contact });
+       await AsyncStorage.setItem('user_form_data', formData);
+    } catch (err) {
+      console.log('Error saving data', err);
+    }
+  };
+
+
   const [busy, setBusy] = useState(false);
 
 
@@ -93,6 +121,7 @@ export default function Payment() {
     Alert.alert('Invalid Contact', 'Please enter a valid 10-digit contact number.');
     return;
   }
+  saveUserData(email, name, contact);
 
   
 
@@ -101,10 +130,13 @@ export default function Payment() {
       let order;
       try {
         
-        const selections = items.map(it => ({
-          meal_date: getDateFromWeekday(it.day),
-          meal_type: it.meal                     
-        }));
+        const selections = items.flatMap(it =>
+          Array(it.qty).fill({
+            meal_date: getDateFromWeekday(it.day),
+            meal_type: it.meal
+          })
+        );
+
         const initres = await fetch(`${BASE_URL}/api/coupons/initiate-order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -119,7 +151,6 @@ export default function Payment() {
           const initdata = await initres.json();
           if (!initres.ok) throw new Error(initdata.message || 'Failed to initiate order.');
           orderIdFromServer = initdata.order_id;
-          console.log(initdata.order_id)
           
         const res = await fetch(`${BASE_URL}/api/payment/create-order`, {
           method: 'POST',
@@ -156,7 +187,6 @@ export default function Payment() {
         theme: { color: '#3399cc' }
       };
       const data = await RazorpayCheckout.open(options);
-      console.log(data);
       const check = await fetch(`${BASE_URL}/api/payment/verify-payment`, {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
@@ -185,7 +215,8 @@ export default function Payment() {
               const prev: BookingEntry[] = stored ? JSON.parse(stored) : [];
 
               const coupons = items.map(it => ({
-                id:   data.razorpay_payment_id,          // order/payment id
+                orderid: orderIdFromServer,               // order id 
+                paymentid:   data.razorpay_payment_id,          //payment id
                 booked:new Date().toDateString(),        //booking date(on which the coupon was purchased)
                 day: it.day,                             // booked for day (e.g. 'Monday')
                 date:getDateFromWeekday(it.day),         // booked for date (ddmmyyyy)
@@ -206,6 +237,7 @@ export default function Payment() {
         router.replace({
           pathname:'/success/[paymentId]',
           params: {
+            orderID: orderIdFromServer,
             paymentId: data.razorpay_payment_id,
             items: JSON.stringify(items),   
             total: (toPay/100).toString(),
