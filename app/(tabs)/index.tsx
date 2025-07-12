@@ -3,10 +3,6 @@ import { MealKey, MealDetails, mealImages } from '@/utils/initMenu';
 import { getWeeklyMenu } from '@/utils/menuUtils';
 import { useTheme } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { SvgUri } from 'react-native-svg';
-const index = require('@/assets/images/index.svg');
-import { Asset } from 'expo-asset';
-
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +13,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import ErrorFetching from '@/components/ErrorFetching';
 
 export default function HomeScreen(): React.ReactElement {
   const colorScheme = useTheme().dark;
@@ -55,14 +52,7 @@ export default function HomeScreen(): React.ReactElement {
   }
 
   if (!todayMeals || Object.keys(todayMeals).length === 0) {
-    return (
-      <View style={{ alignItems: 'center', marginTop: 40 }}>
-        <SvgUri width={150} height={150} uri={Asset.fromModule(index).uri} />
-        <Text style={styles.cardHeading}>Sorry, can't fetch current menu</Text>
-        <Text style={styles.description}>Please try again later</Text>
-     
-      </View>
-    );
+    return (<ErrorFetching mode={mode} />);
   }
 
   return (
