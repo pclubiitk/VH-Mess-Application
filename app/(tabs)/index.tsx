@@ -52,7 +52,7 @@ export default function HomeScreen(): React.ReactElement {
   }
 
   if (!todayMeals || Object.keys(todayMeals).length === 0) {
-    return (<ErrorFetching mode={mode} />);
+    return (<ErrorFetching mode={mode} callback={loadTodayMeals} />);
   }
 
   return (

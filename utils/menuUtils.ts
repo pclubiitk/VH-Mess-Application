@@ -51,7 +51,17 @@ const fetchWeeklyMenuFromServer = async (): Promise<{ menu: WeeklyMenu; lastUpda
 
     const transformedMenu: WeeklyMenu = {};
     data.menu.forEach((item: any) => {
-      const { day_of_week, meal_type, description, price } = item;
+        const {
+        day_of_week,
+        meal_type,
+        description,
+        price,
+      }: {
+        day_of_week: string;
+        meal_type: MealKey;
+        description: string;
+        price: number;
+      } = item;
       transformedMenu[day_of_week] = transformedMenu[day_of_week] || {};
       if (typeof meal_type === 'string') {
         transformedMenu[day_of_week][meal_type as MealKey] = { description, price };

@@ -1,24 +1,8 @@
-//Backend return should match this
-// {
-//   "Monday": {
-//     "breakfast": {
-//       "description": "Idli + chutney",
-//       "price": 40,
-//       "coupons": 2
-//     },
-//     ...
-//   },
-//   ...
-// }
-
 import { Colors } from "@/constants/Colors";
 import { getWeeklyMenu } from "@/utils/menuUtils";
 import { WeeklyMenu, MealDetails, mealImages, MealKey } from "@/utils/initMenu";
 import { useTheme } from "@react-navigation/native";
 import React, { useEffect, useMemo, useState } from "react";
-import { SvgUri } from "react-native-svg";
-const index = require("@/assets/images/index.svg");
-import { Asset } from "expo-asset";
 
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import ErrorFetching from "@/components/ErrorFetching";
@@ -52,7 +36,7 @@ export default function ExploreScreen() {
   }
 
   if (!menuData || Object.keys(menuData).length === 0) {
-    return <ErrorFetching mode={mode} />;
+    return <ErrorFetching mode={mode} callback={loadMenu} />;
   }
 
   return (
