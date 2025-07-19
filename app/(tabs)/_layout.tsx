@@ -33,6 +33,7 @@ const PAGE_TITLES: Record<string, string> = {
   booking: 'Book Meal',
   payment: 'Payment',
   success: 'Payment Success',
+  Contact: 'Contact Details'
 };
 
 export default function TabLayout() {
@@ -161,6 +162,15 @@ export default function TabLayout() {
               name="History"
               options={{
                 title: 'Booking History',
+                tabBarIcon: ({ color }) => (
+                  <IconSymbol size={28} name="clock.arrow.circlepath" color={color} />
+                ),
+              }}
+            />
+                <Tabs.Screen
+              name="Contact"
+              options={{
+                title: 'Contact Details',
                 tabBarIcon: ({ color }) => (
                   <IconSymbol size={28} name="clock.arrow.circlepath" color={color} />
                 ),

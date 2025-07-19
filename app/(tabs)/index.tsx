@@ -79,6 +79,14 @@ export default function HomeScreen(): React.ReactElement {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+                    <Text style={styles.date}>
+{new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })}
+</Text>
         {(Object.keys(todayMeals) as MealKey[]).map((mealKey, idx) => (
           <View key={idx} style={styles.card}>
             <View style={{ flex: 1 }}>
@@ -130,6 +138,13 @@ function createStyles(mode: 'light' | 'dark') {
       textAlign: 'center',
       color: isDark ? Colors.dark.text : Colors.light.text,
       fontFamily: 'Poppins_600SemiBold',
+    },
+       date:{
+    fontSize: 20,
+      color: isDark ? Colors.dark.tint : Colors.light.tint,
+      fontFamily: 'Poppins_600SemiBold',
+      marginBottom: 4,
+      marginLeft:13,
     },
     card: {
       flexDirection: 'row',
