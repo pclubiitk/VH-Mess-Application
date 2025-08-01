@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
-import { MealKey, MealDetails, mealImages, dayNames, CUT_OFF } from '@/utils/initMenu';
+import { MealKey, MealDetails, mealImages, dayNames } from '@/utils/initMenu';
+import { CUT_OFF, fetchAndSetCutoffTimings } from '@/utils/menuUtils';
 import { getWeeklyMenu } from '@/utils/menuUtils';
 import { useTheme } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -47,6 +48,7 @@ export default function HomeScreen(): React.ReactElement {
     };
   useEffect(()=>{
     loadTodayMeals();
+    fetchAndSetCutoffTimings();
   }, []);
 
   const loadTodayMeals = async () => {

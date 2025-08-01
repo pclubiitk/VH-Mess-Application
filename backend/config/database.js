@@ -9,6 +9,17 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
     dialect: 'mysql',
     logging: false, 
 });
+  const MealTiming = sequelize.define("MealTiming", {
+    meal: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    closetime: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    }
+  });
+
 
 const MenuItem = sequelize.define('MenuItem', {
     id: {
@@ -37,6 +48,14 @@ const MenuItem = sequelize.define('MenuItem', {
         defaultValue: true,
         allowNull: false,
     },
+    max_coupons: {
+  type: DataTypes.INTEGER,
+  allowNull: true, 
+},    available_coupons: {
+  type: DataTypes.INTEGER,
+  allowNull: true, 
+},
+
 }, {
     timestamps: true,
 });
@@ -86,10 +105,13 @@ const PurchasedCoupon = sequelize.define('PurchasedCoupon', {
     },
 }, {
 });
+sequelize.sync({ force: true }); 
+
 
 module.exports = {
     sequelize,
     MenuItem,
+    MealTiming,
     PurchasedCoupon,
 };
 

@@ -1,4 +1,4 @@
-const { MenuItem } = require('../config/database');
+const { MenuItem,MealTiming } = require('../config/database');
 
 const getCurrentMenu = async (req, res) => {
   try {
@@ -21,11 +21,21 @@ const getCurrentMenu = async (req, res) => {
       where: { is_active: true },
     });
 
-    res.status(200).json({
-      success: true,
-      lastUpdated, 
-      menu,
-    });
+const menuResponse = menu.map(item => ({
+  day_of_week: item.day_of_week,
+  meal_type: item.meal_type,
+  description: item.description,
+  price: item.price,
+  coupons: item.max_coupons,  
+  available_coupons: item.available_coupons,
+}));
+
+res.status(200).json({
+  success: true,
+  lastUpdated,
+  menu: menuResponse,
+});
+
 
   } catch (error) {
     console.error('Error fetching current menu:', error);
@@ -35,6 +45,35 @@ const getCurrentMenu = async (req, res) => {
     });
   }
 };
+
+
+const getCutoffMealTimings = async (req, res) => {
+  try {
+    const timings = await MealTiming.findAll();
+
+    const response = {};
+    timings.forEach((timing) => {
+      const key = timing.meal.charAt(0).toUpperCase() + timing.meal.slice(1).toLowerCase();
+      response[key] = {
+        hour: parseInt(timing.closetime),
+        minute: 0,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    });
+  } catch (err) {
+    console.error("Error fetching meal timings:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch meal timings",
+    });
+  }
+};
+
+
 
 const getLastUpdatedTime = async (req, res) => {
   try {
@@ -65,6 +104,8 @@ const getLastUpdatedTime = async (req, res) => {
 
 module.exports = {
     getCurrentMenu,
-    getLastUpdatedTime
+    getLastUpdatedTime,
+    getCutoffMealTimings,
+
 };
 
