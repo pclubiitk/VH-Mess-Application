@@ -1,4 +1,4 @@
-const { MenuItem, PurchasedCoupon, sequelize } = require("../config/database");
+const { MenuItem, PurchasedCoupon, sequelize, MealTiming  } = require("../config/database");
 const xlsx = require("xlsx");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -17,21 +17,72 @@ const uploadMenu = async (req, res) => {
     await MenuItem.update({ is_active: false }, { where: {}, transaction: t });
 
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const [menuSheetName, timingSheetName] = workbook.SheetNames;
 
+    console.log("Sheet names:", workbook.SheetNames);
+
+    // === Parse timing sheet ===
+    const timingSheet = workbook.Sheets[timingSheetName];
+    const timingRows = xlsx.utils.sheet_to_json(timingSheet, { defval: "", raw: false });
+
+    const mealTimings = [];
+
+    timingRows.forEach((row, index) => {
+      const meal = String(row.meal || "").trim().toLowerCase();
+      const closetime = parseInt(row.closetime);
+
+      if (!meal || isNaN(closetime)) {
+        console.warn(`Skipping invalid timing row at index ${index}:`, row);
+        return;
+      }
+
+      mealTimings.push({
+        meal,
+        closetime,
+      });
+    });
+
+    console.log("Parsed mealTimings:", mealTimings);
+
+    await MealTiming.destroy({ where: {}, transaction: t });
+    if (mealTimings.length > 0) {
+      await MealTiming.bulkCreate(mealTimings, { transaction: t });
+    }
+
+    // === Parse menu sheet ===
+    const worksheet = workbook.Sheets[menuSheetName];
     const rows = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+
+    const validDays = [
+      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+    ];
+
+    const normalizeDay = (str) => {
+      const map = {
+        mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday",
+        fri: "Friday", sat: "Saturday", sun: "Sunday",
+      };
+      if (!str) return null;
+      const key = String(str).toLowerCase().slice(0, 3);
+      return map[key] || null;
+    };
+
     const newMenuItems = [];
 
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      const day = row[0];
+      const rawDay = row[0];
+      const day = normalizeDay(rawDay);
 
-      if (!day) continue;
+      if (!day || !validDays.includes(day)) {
+        console.warn("Skipping invalid day in menu sheet:", rawDay);
+        continue;
+      }
 
-      const isValidDescription = (description) => {
-        return description && String(description).trim() !== "";
-      };
+      const maxCoupons = row[7];
+
+      const isValidDescription = (description) =>
+        description && String(description).trim() !== "";
 
       if (isValidDescription(row[1]) && row[2]) {
         newMenuItems.push({
@@ -40,6 +91,8 @@ const uploadMenu = async (req, res) => {
           description: String(row[1]).trim(),
           price: parseFloat(row[2]),
           is_active: true,
+          max_coupons: parseInt(maxCoupons) || null,
+             available_coupons: parseInt(maxCoupons) || null,
         });
       }
 
@@ -50,6 +103,8 @@ const uploadMenu = async (req, res) => {
           description: String(row[3]).trim(),
           price: parseFloat(row[4]),
           is_active: true,
+          max_coupons: parseInt(maxCoupons) || null,
+             available_coupons: parseInt(maxCoupons) || null,
         });
       }
 
@@ -60,10 +115,12 @@ const uploadMenu = async (req, res) => {
           description: String(row[5]).trim(),
           price: parseFloat(row[6]),
           is_active: true,
+          max_coupons: parseInt(maxCoupons) || null,
+          available_coupons: parseInt(maxCoupons) || null,
         });
       }
-    }
-
+  }
+  
     if (newMenuItems.length === 0) {
       throw new Error(
         "No valid menu items with descriptions found in the uploaded file.",

@@ -5,11 +5,15 @@ export type MealDetails = {
   description: string;
   price: number;
   coupons: number;
+  available_coupons: number;
+
 };
 export type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
 export interface DayMeal {
   description: string;
   price: number;
+   coupons: number;
+     available_coupons: number;
 }
 export const mealImages = {
   Breakfast: require("@/assets/images/breakfast.jpg"),
@@ -27,8 +31,3 @@ export const dayNames = [
   "Sunday",
 ];
 
-export const CUT_OFF: Record<MealKey, { hour: number; minute: number }> = {
-  Breakfast: { hour: 6, minute: 0 },
-  Lunch: { hour: 12, minute: 0 },
-  Dinner: { hour: 18, minute: 0 },
-};

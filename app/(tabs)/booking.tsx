@@ -1,5 +1,6 @@
 import { Colors } from "@/constants/Colors";
-import { CUT_OFF, MealDetails, MealKey, dayNames } from "@/utils/initMenu";
+import { MealDetails, MealKey, dayNames } from "@/utils/initMenu";
+import { CUT_OFF, fetchAndSetCutoffTimings } from "@/utils/menuUtils";
 import { getWeeklyMenu } from "@/utils/menuUtils";
 import { useFocusEffect, useTheme } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -17,6 +18,7 @@ import {
   findNodeHandle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BASE_URL } from "@/constants/config";
 
 // type MealDetails = { description: string; price: number; coupons: number };
 type WeeklyMenu = Record<string, Record<MealKey, MealDetails>>;
@@ -24,6 +26,7 @@ type Booking = Record<string, Record<MealKey, { qty: number; price: number }>>;
 
 function getWeekRange(date: Date) {
   const day = date.getDay() || 7;
+        
   const monday = new Date(date);
   monday.setDate(date.getDate() - day + 1);
   const sunday = new Date(monday);
@@ -78,6 +81,7 @@ export default function BookingScreen() {
 
   useEffect(() => {
     fetchMenu();
+     fetchAndSetCutoffTimings();
   }, []);
 
   useFocusEffect(
@@ -92,6 +96,27 @@ export default function BookingScreen() {
     return () => clearTimeout(timeout);
   }, [todayLabel])
 );
+  
+const resetWeeklyCoupons = async () => {
+  const lastResetDate = sessionStorage.getItem("lastResetDate");
+  const today = new Date().toISOString().split("T")[0];
+  console.log(lastResetDate, today);
+  if (lastResetDate === today) {
+    
+    return;
+  }
+  try {
+    const res = await fetch(`${BASE_URL}/api/coupons/reset-available-coupons`, { method: "GET" });
+    if (!res.ok) throw new Error("Failed to reset coupons");
+    const Data = await res.json();
+    const updatedDate=Data.Date;
+    
+    sessionStorage.setItem("lastResetDate", updatedDate);
+
+  } catch (err) {
+    console.error("Failed to reset weekly coupons", err);
+  }
+};
 
 
   const daysOfThisWeek = dayNames.filter((_, idx) => {
@@ -148,6 +173,15 @@ export default function BookingScreen() {
       return updated;
     });
   };
+useEffect(() => {
+  const today = new Date();
+  const day = today.getDate();
+  
+
+  if (day === 1) {
+    resetWeeklyCoupons();
+  }
+}, []);
 
   const changePeople = (day: string, meal: MealKey, delta: number) => {
     setBookings((prev) => {
@@ -257,6 +291,8 @@ export default function BookingScreen() {
                         <View style={{ flex: 2 }}>
                           <Text style={styles.mealLabel}>{meal}</Text>
                           <Text style={styles.mealDescription}>{details.description}</Text>
+                          {/* we need to improve total coupans design */}
+                           <Text style={styles.mealDescription}>TotalCoupons--{details.available_coupons}</Text>
                           <Text style={styles.mealPrice}>₹{details.price}</Text>
                         </View>
                         <View style={{ flex: 1, alignItems: "center" }}>

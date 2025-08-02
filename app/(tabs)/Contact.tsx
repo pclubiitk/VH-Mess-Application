@@ -14,9 +14,9 @@ export default function ContactScreen() {
   return (
     <View style={styles.container}>
       
-         <text style={styles.cardHeading}>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio sit suscipit ipsa, obcaecati, ullam tenetur at dolorum mollitia culpa dolore minima. Doloremque, temporibus odio in eos numquam deleniti praesentium magnam.
-        </text>
+         <Text style={styles.cardHeading}>
+        For any queries and cancelation of the bookings, please contact usat following details:
+        </Text>
 
       <View style={styles.card}>
         {/* <Text style={styles.label}>Name</Text>

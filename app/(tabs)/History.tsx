@@ -7,6 +7,8 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+  import { Modal, Pressable } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { SvgUri } from 'react-native-svg';
 const empty = require('@/assets/images/empty.svg');
 
@@ -28,6 +30,12 @@ export default function History() {
   const styles = createStyles(mode);
 
   const [history, setHistory] = useState<Meal[]>([]);
+
+
+const [showPreview, setShowPreview] = useState(false);
+const [receiptHTML, setReceiptHTML] = useState('');
+const [currentItem, setCurrentItem] = useState<Meal | null>(null);
+
   const logoFallback = require('@/assets/IIT-Kanpur.png');
 
 
@@ -51,6 +59,69 @@ useFocusEffect(
     loadData();
   }, [])
 );
+const getReceiptHTML = (item: Meal) => {
+  return `
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>Meal Coupon Receipt</title>
+      <style>
+        body {
+          font-family: 'Courier New', Courier, monospace;
+          background: #f7f7f7;
+          margin: 0;
+          padding: 0;
+        }
+        .receipt-box {
+          max-width: 380px;
+          margin: 40px auto;
+          padding: 24px;
+          border: 1.5px dashed #333;
+          background: #fff;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        h1 {
+          font-size: 22px;
+          text-align: center;
+          margin: 0 0 12px 0;
+          letter-spacing: 1px;
+        }
+        p {
+          font-size: 13px;
+          margin: 6px 0;
+        }
+        .footer {
+          margin-top: 18px;
+          text-align: center;
+          font-size: 11px;
+          color: #888;
+          border-top: 1px dashed #bbb;
+          padding-top: 8px;
+          letter-spacing: 0.5px;
+        }
+        .label {
+          color: #555;
+          font-weight: bold;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="receipt-box">
+        <h1>Meal Coupon</h1>
+        <p><span class="label">Name:</span> ${item.userName || 'Guest'}</p>
+        <p><span class="label">Order ID:</span> ${item.orderid}</p>
+        <p><span class="label">Booked For:</span> ${item.day} ${item.date}</p>
+        <p><span class="label">Meal:</span> ${item.meal}</p>
+        <p><span class="label">Each Meal Cost:</span> ₹${item.cost}</p>
+        <p><span class="label">Amount Paid:</span> ₹${item.cost * item.qty}</p>
+        <p><span class="label">Booked On:</span> ${item.booked}</p>
+        <div class="footer">VH Mess Application • IIT Kanpur</div>
+      </div>
+    </body>
+  </html>
+  `;
+};
+
 
   const generatePDFReceipt = async (item: Meal) => {
     try {
@@ -146,7 +217,12 @@ useFocusEffect(
 
         }
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => generatePDFReceipt(item)} style={[styles.card, { borderStyle: 'dashed', borderWidth: 1, borderColor: '#ccc' }]}>
+          <TouchableOpacity   onPress={() => {
+    setCurrentItem(item);
+    setReceiptHTML(getReceiptHTML(item));
+    setShowPreview(true);
+  }}
+  style={[styles.card, { borderStyle: 'dashed', borderWidth: 1, borderColor: '#ccc' }]}>
             <View style={styles.row}>
               <Text style={styles.meal}>
                 {item.meal.charAt(0).toUpperCase() + item.meal.slice(1)} Coupon{'\n'}
@@ -163,6 +239,40 @@ useFocusEffect(
           </TouchableOpacity>
         )}
       />
+      
+
+      <Modal visible={showPreview} animationType="slide">
+  <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
+      <WebView originWhitelist={['*']} source={{ html: receiptHTML }} />
+    </View>
+    <View style={{ padding: 10, flexDirection: 'row', justifyContent: 'space-around' }}>
+      <Pressable
+        onPress={() => {
+          if (currentItem) generatePDFReceipt(currentItem);
+        }}
+        style={{
+          backgroundColor: Colors.light.background,
+          padding: 10,
+          borderRadius: 6,
+        }}
+      >
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>Share PDF</Text>
+      </Pressable>
+      <Pressable
+        onPress={() => setShowPreview(false)}
+        style={{
+          backgroundColor: '#ccc',
+          padding: 10,
+          borderRadius: 6,
+        }}
+      >
+        <Text style={{ color: '#333' }}>Close</Text>
+      </Pressable>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 }
