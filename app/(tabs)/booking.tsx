@@ -292,7 +292,7 @@ useEffect(() => {
                           <Text style={styles.mealLabel}>{meal}</Text>
                           <Text style={styles.mealDescription}>{details.description}</Text>
                           {/* we need to improve total coupans design */}
-                           <Text style={styles.mealDescription}>TotalCoupons--{details.available_coupons}</Text>
+                           <Text style={styles.mealDescription}>Coupons--{details.available_coupons}</Text>
                           <Text style={styles.mealPrice}>₹{details.price}</Text>
                         </View>
                         <View style={{ flex: 1, alignItems: "center" }}>

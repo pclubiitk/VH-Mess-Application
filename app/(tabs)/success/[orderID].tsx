@@ -177,7 +177,9 @@ export default function Success() {
           <View style={styles.divider} />
 
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total to Pay at Counter</Text>
+            
+            <Text style={styles.totalLabel}> Total to Pay at Counter</Text>
+
             <Text style={styles.totalValue}>₹{Number(total).toFixed(2)}</Text>
           </View>
 
@@ -262,21 +264,27 @@ function createStyles(isDark: boolean) {
       backgroundColor: '#e1e1e1',
       marginVertical: 12,
     },
-    totalRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 16,
-    },
-    totalLabel: {
-      fontSize: 16,
-      fontWeight: '600',
+   totalRow: {
+      backgroundColor: isDark ? Colors.dark.background : Colors.light.background,
+  paddingVertical: 10,
+  paddingHorizontal: 16,
+  borderRadius: 8,
+  alignItems: 'center',
+  marginTop: 12,
+},
+totalLabel: {
+  fontSize: 14,
+  fontWeight: '500',
       color: isDark ? Colors.dark.text : Colors.light.text,
-    },
-    totalValue: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: isDark ? Colors.dark.text : Colors.light.text,
-    },
+  marginBottom: 4,
+},
+totalValue: {
+  fontSize: 20,
+  fontWeight: '700',
+     color: isDark ? Colors.dark.text : Colors.light.text,
+},
+
+    
     subLabel: {
       fontSize: 14,
       color: isDark ? Colors.dark.text : Colors.light.text,

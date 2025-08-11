@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
+import { getWeeklyMenu } from '@/utils/menuUtils';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type BookingEntry = { day: string; meal: string; qty: number; price: number };
@@ -180,8 +181,10 @@ export default function Payment() {
           items: JSON.stringify(items),   
           total: (toPay/100).toString(),
         },
+
       });
-       
+       getWeeklyMenu()
+
 
     } catch (error: any) {
       Alert.alert('Payment failed', error?.message ?? 'Retry');   

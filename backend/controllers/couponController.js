@@ -17,13 +17,13 @@ const initiateOrder = async (req, res) => {
 
         for (const selection of selections) {
             const { meal_date, meal_type } = selection;
-            updateNumberofCoupons(meal_date, meal_type);
+         
             if (!meal_date || !meal_type) {
                 throw new Error('Invalid selection format. Each selection must have a meal_date and meal_type.');
             }
 
             const dayOfWeek = new Date(meal_date).toLocaleString('en-US', { weekday: 'long' });
-
+             const result= await updateNumberofCoupons(dayOfWeek, meal_type);
             const menuItem = await MenuItem.findOne({
                 where: { day_of_week: dayOfWeek, meal_type: meal_type, is_active: true }
             });
@@ -70,56 +70,26 @@ const initiateOrder = async (req, res) => {
 };
 const updateNumberofCoupons = async (day_of_week, meal_type) => {
 
-
-
-  try {
-    const menuItem = await MenuItem.findOne({
-      where: {
-        day_of_week,
-        meal_type,
-        is_active: true,
-      },
-    });
-
-    if (!menuItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Menu item not found.',
-      });
-    }
-
-    if (menuItem.available_coupons === null) {
-      return res.status(400).json({
-        success: false,
-        message: 'This menu item does not have a limit on coupons.',
-      });
-    }
-
-    const remainingCoupons = menuItem.available_coupons - 1;
-
-    if (remainingCoupons < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Used coupons exceed the maximum allowed.',
-      });
-    }
-
-    menuItem.available_coupons  = remainingCoupons;
-    await menuItem.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Number of coupons updated successfully.',
-      remainingCoupons,
-    });
-  } catch (error) {
-    console.error('Error updating number of coupons:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error. Please try again later.',
-    });
+  const menuItem = await MenuItem.findOne({ where: { day_of_week:day_of_week, meal_type:meal_type } });
+  if (!menuItem) {
+    throw new Error('Menu item not found.');
   }
-}
+
+  if (menuItem.available_coupons === null) {
+    throw new Error('This menu item does not have a limit on coupons.');
+  }
+
+  const remainingCoupons = menuItem.available_coupons - 1;
+  if (remainingCoupons < 0) {
+    throw new Error('Used coupons exceed the maximum allowed.');
+  }
+
+  menuItem.available_coupons = remainingCoupons;
+  await menuItem.save();
+
+  return { remainingCoupons };
+};
+
 const resetAvailableCoupons = async (req, res) => {
     try {
         const menuItems = await MenuItem.findAll({
@@ -143,41 +113,7 @@ const resetAvailableCoupons = async (req, res) => {
     }
 };
 
-//     if (!order_id || !payment_id || !transaction_status) {
-//         return res.status(400).json({ success: false, message: 'Invalid webhook payload.' });
-//     }
 
-//     try {
-//         if (transaction_status === 'SUCCESS') {
-//             const [affectedRows] = await PurchasedCoupon.update(
-//                 {
-//                     status: 'Active',
-//                     payment_id: payment_id
-//                 },
-//                 {
-//                     where: {
-//                         order_id: order_id,
-//                         status: 'Pending'
-//                     }
-//                 }
-//             );
-
-//             if (affectedRows > 0) {
-//                 console.log(`Successfully activated ${affectedRows} coupons for order ${order_id}.`);
-//             } else {
-//                 console.log(`Webhook received for already processed or invalid order: ${order_id}`);
-//             }
-//         } else {
-//             console.log(`Payment failed or was cancelled for order ${order_id}.`);
-//         }
-        
-//         res.status(200).send('Webhook processed.');
-
-//     } catch (error) {
-//         console.error(`Error processing webhook for order ${order_id}:`, error);
-//         res.status(200).send('Webhook processed with internal error.');
-//     }
-// };
 
 
 module.exports = {

@@ -64,6 +64,7 @@ const getReceiptHTML = (item: Meal) => {
   <html>
     <head>
       <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Meal Coupon Receipt</title>
       <style>
         body {
@@ -73,27 +74,30 @@ const getReceiptHTML = (item: Meal) => {
           padding: 0;
         }
         .receipt-box {
-          max-width: 380px;
-          margin: 40px auto;
-          padding: 24px;
+          width: 90%;
+          max-width: 400px;
+          margin: 20px auto;
+          padding: 16px;
           border: 1.5px dashed #333;
           background: #fff;
           box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+          box-sizing: border-box;
         }
         h1 {
-          font-size: 22px;
+          font-size: 6vw; /* scales with screen size */
           text-align: center;
           margin: 0 0 12px 0;
           letter-spacing: 1px;
         }
         p {
-          font-size: 13px;
+          font-size: 4vw; /* responsive font size */
           margin: 6px 0;
+          word-wrap: break-word;
         }
         .footer {
           margin-top: 18px;
           text-align: center;
-          font-size: 11px;
+          font-size: 3.5vw;
           color: #888;
           border-top: 1px dashed #bbb;
           padding-top: 8px;
@@ -115,12 +119,14 @@ const getReceiptHTML = (item: Meal) => {
         <p><span class="label">Each Meal Cost:</span> ₹${item.cost}</p>
         <p><span class="label">Amount Paid:</span> ₹${item.cost * item.qty}</p>
         <p><span class="label">Booked On:</span> ${item.booked}</p>
+      
         <div class="footer">VH Mess Application • IIT Kanpur</div>
       </div>
     </body>
   </html>
   `;
 };
+
 
 
   const generatePDFReceipt = async (item: Meal) => {
@@ -257,7 +263,7 @@ const getReceiptHTML = (item: Meal) => {
           borderRadius: 6,
         }}
       >
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>Share PDF</Text>
+        <Text style={styles.meal}>Share PDF</Text>
       </Pressable>
       <Pressable
         onPress={() => setShowPreview(false)}
