@@ -259,38 +259,37 @@ export default function BookingScreen() {
                           <Text style={styles.mealDescription}>{details.description}</Text>
                           <Text style={styles.mealPrice}>₹{details.price}</Text>
                         </View>
-                        <View style={{ flex: 1, alignItems: "center" }}>
-                          <Switch
-                            value={count.qty > 0}
-                            disabled={!open}
-                            onValueChange={() => toggleMeal(day, meal)}
-                            trackColor={{ true: open ? "#3399cc" : "#888" }}
-                            thumbColor={open ? undefined : "#555"}
-                          />
-                        </View>
-                        <View style={{ flex: 2, alignItems: "flex-end" }}>
-                          {open && count.qty > 0 ? (
-                            <View style={styles.counterContainer}>
+                        
+                        <View style={{ flex: 1, alignItems: "flex-end" }}>
+                          {count.qty > 0 ? (
+                            <View style={styles.counterPill}>
                               <TouchableOpacity
+                                style={[styles.counterBtn, styles.minusBtn]}
                                 onPress={() => changePeople(day, meal, -1)}
                               >
-                                <Text style={styles.counterBtn}>-</Text>
+                                <Text style={styles.counterTextBtn}>−</Text>
                               </TouchableOpacity>
-                              <Text style={styles.counterText}>
-                                {count.qty}
-                              </Text>
+                              <Text style={styles.counterValue}>{count.qty}</Text>
                               <TouchableOpacity
+                                style={[styles.counterBtn, styles.plusBtn]}
                                 onPress={() => changePeople(day, meal, 1)}
                               >
-                                <Text style={styles.counterBtn}>+</Text>
+                                <Text style={styles.counterTextBtn}>+</Text>
                               </TouchableOpacity>
                             </View>
-                          ) : !open && isToday ? (
-                            <Text numberOfLines={1} style={styles.closedLabel}>
-                              Closed
-                            </Text>
-                          ) : null}
-                        </View>                        
+                          ) : (
+                            <TouchableOpacity
+                              style={[
+                                styles.addBtn,
+                                !open && styles.addBtnDisabled
+                              ]}
+                              disabled={!open}
+                              onPress={() => toggleMeal(day, meal)}
+                            >
+                              <Text style={styles.addBtnText}>{open ? "Add" : "Closed"}</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
                       </View>
                     );
                   })}
@@ -460,5 +459,48 @@ function createStyles(isDark: boolean) {
       // fontWeight: "600",
       fontFamily: "Poppins_600SemiBold",
     },
+    addBtn: {
+  backgroundColor: "#3399cc",
+  paddingVertical: 6,
+  paddingHorizontal: 16,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+  minWidth: 70,
+},
+addBtnDisabled: {
+  backgroundColor: "#aaa",
+},
+addBtnText: {
+  color: "#fff",
+  fontSize: 14,
+  fontFamily: "Poppins_500Medium",
+},
+
+counterPill: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f0f0f0",
+  borderRadius: 20,
+  paddingVertical: 4,
+  paddingHorizontal: 8,
+},
+minusBtn: {
+  backgroundColor: "#3399cc",
+},
+plusBtn: {
+  backgroundColor: "#3399cc",
+},
+counterTextBtn: {
+  fontSize: 18,
+  color: "#fff",
+  fontWeight: "bold",
+},
+counterValue: {
+  fontSize: 16,
+  fontFamily: "Poppins_600SemiBold",
+  marginHorizontal: 8,
+  color: "#333",
+},
   });
 }
