@@ -53,6 +53,7 @@ export default function Payment() {
   const [contact, setContact] = useState('');
 
 
+
   useEffect(() => {
     const loadFormData = async () => {
       try {
@@ -71,9 +72,34 @@ export default function Payment() {
     loadFormData();
   }, []);
 
-  const saveUserData = async (email:string, name:string, contact:string) => {
+
+
+  const saveUserData = async ( contact:string) => {
+    const token = await AsyncStorage.getItem('token') 
+
+
+const res = await fetch(`${BASE_URL}/api/user/me`, {
+        method: "GET",
+                headers: {
+          "Content-Type": "application/json",
+        authorization: token ?? "" 
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Network error");
+      }
+
+      const data = await res.json();
+      const email =data.email;
+      const name =data.name;
+
+
+
+      
+
     try {
-       const formData = JSON.stringify({ email, name, contact });
+       const formData = JSON.stringify({ email,name, contact });
        await AsyncStorage.setItem('user_form_data', formData);
     } catch (err) {
       console.error('Error saving data', err);
@@ -121,7 +147,7 @@ export default function Payment() {
     Alert.alert('Invalid Contact', 'Please enter a valid 10-digit contact number.');
     return;
   }
-  saveUserData(email, name, contact);
+  saveUserData(email);
 
   
 
@@ -204,6 +230,7 @@ export default function Payment() {
           placeholder='Enter Your Name'
           placeholderTextColor={isDark ? '#aaa' : '#555'}
           value={name}
+          editable={false}
           onChangeText={text => setName(text)}
         />
         <Text style={styles.label}>Email:</Text>
@@ -212,6 +239,7 @@ export default function Payment() {
           placeholder="Enter Your Email"
           placeholderTextColor={isDark ? '#ccc' : '#555'}
           value={email}
+                  editable={false}
           autoCapitalize="none"
           keyboardType="email-address"
           onChangeText={text => setEmail(text.toLowerCase())}
