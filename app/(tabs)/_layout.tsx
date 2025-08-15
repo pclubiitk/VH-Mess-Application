@@ -33,7 +33,8 @@ const PAGE_TITLES: Record<string, string> = {
   booking: 'Book Meal',
   payment: 'Payment',
   success: 'Payment Success',
-  Contact: 'Contact Details'
+  Contact: 'Contact Details',
+  auth : 'Verification',
 };
 
 export default function TabLayout() {
@@ -176,9 +177,20 @@ export default function TabLayout() {
                 ),
               }}
             />
+                  <Tabs.Screen
+              name="auth"
+              options={{
+                title: 'Verification',
+                tabBarIcon: ({ color }) => (
+                  <IconSymbol size={28} name="clock.arrow.circlepath" color={color} />
+                ),
+              }}
+            />
             <Tabs.Screen name="booking" options={{ href: null, tabBarStyle: { display: 'none' } }} />
             <Tabs.Screen name="Order" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+            
             <Tabs.Screen name="success/[orderID]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+            <Tabs.Screen name="success/verified" options={{ href: null, tabBarStyle: { display: 'none' } }} />
           </Tabs>
         </ThemeProvider>
       </View>

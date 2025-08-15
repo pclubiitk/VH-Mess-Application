@@ -21,6 +21,38 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
   });
 
 
+const User = sequelize.define("User", {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+
+email: {
+  type: DataTypes.STRING,
+  allowNull: false,
+  unique: true,
+  validate: {
+    isEmail: true,
+    endsWithIITK(value) {
+      if (!value.endsWith("@iitk.ac.in")) {
+        throw new Error("Email must end with @iitk.ac.in");
+      }
+    },
+  },
+},
+
+
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+verified: {
+  type: DataTypes.BOOLEAN,
+  defaultValue: false
+}
+
+});
+
 const MenuItem = sequelize.define('MenuItem', {
     id: {
         type: DataTypes.INTEGER,
@@ -113,5 +145,6 @@ module.exports = {
     MenuItem,
     MealTiming,
     PurchasedCoupon,
+    User
 };
 

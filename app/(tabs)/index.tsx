@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -15,6 +16,8 @@ import {
   View
 } from 'react-native';
 import ErrorFetching from '@/components/ErrorFetching';
+import { BASE_URL } from '@/constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen(): React.ReactElement {
   const colorScheme = useTheme().dark;
@@ -50,6 +53,87 @@ export default function HomeScreen(): React.ReactElement {
     loadTodayMeals();
     fetchAndSetCutoffTimings();
   }, []);
+
+const handleAuthRedirectParam = async(mealKey:string) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        router.push('/(tabs)/auth');
+        return;
+      }
+      console.log("Checking user authentication...");
+      const res = await fetch(`${BASE_URL}/api/user/me`, {
+        method: "GET",
+        credentials: "include", 
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": token,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Network error");
+      }
+
+      const data = await res.json();
+      console.log(data)
+
+      if (data.verified) {
+                     router.push({ pathname: '/(tabs)/booking', params: { selectedMeal: mealKey } });
+
+      } else {
+        Alert.alert(
+          "Email not verified",
+          "Please verify your email before booking."
+        );
+        router.push("/(tabs)/auth");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Something went wrong.");
+    }
+  }
+
+  const handleAuthRedirect = async() => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        router.push('/(tabs)/auth');
+        return;
+      }
+      console.log("Checking user authentication...");
+      const res = await fetch(`${BASE_URL}/api/user/me`, {
+        method: "GET",
+        credentials: "include", 
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": token,
+        },
+
+        
+      });
+
+      if (!res.ok) {
+        throw new Error("Network error");
+      }
+
+      const data = await res.json();
+      console.log(data)
+
+      if (data.verified) {
+        router.push("/(tabs)/booking");
+      } else {
+        Alert.alert(
+          "Email not verified",
+          "Please verify your email before booking."
+        );
+        router.push("/(tabs)/auth");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Something went wrong.");
+    }
+  };
 
   const loadTodayMeals = async () => {
     try {
@@ -95,7 +179,8 @@ export default function HomeScreen(): React.ReactElement {
               <Text style={styles.cardHeading}>{mealKey}</Text>
               <Text style={styles.price}>₹{todayMeals[mealKey].price}</Text>
               <Text style={styles.desc}>{todayMeals[mealKey].description}</Text>
-              <TouchableOpacity style={styles.button} disabled ={!isMealOpen(today,mealKey)} onPress={() => router.push({ pathname: '/(tabs)/booking', params: { selectedMeal: mealKey } })}>
+              <TouchableOpacity style={styles.button} disabled ={!isMealOpen(today,mealKey)}
+               onPress={()=>{handleAuthRedirectParam(mealKey)}}>
                 <Text style={isMealOpen(today,mealKey)? styles.buttonText: styles.disablebuttonText}>{isMealOpen(today,mealKey) ? "Book Now →": "Closed"}</Text>
               </TouchableOpacity>
             </View>
@@ -112,7 +197,10 @@ export default function HomeScreen(): React.ReactElement {
             </Text>
             <TouchableOpacity
               style={styles.fullButton}
-              onPress={() => router.push('/(tabs)/booking')}
+              onPress={handleAuthRedirect
+              
+              
+              }
             >
               <Text style={styles.buttonText}>Book for Other Days</Text>
             </TouchableOpacity>

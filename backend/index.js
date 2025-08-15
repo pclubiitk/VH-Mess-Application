@@ -11,6 +11,9 @@ const { sequelize } = require('./config/database');
 const menuRoutes = require('./routes/menuRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes')
+const cookieParser = require('cookie-parser');
+
 
 // const paymentRoutes = require('./routes/paymentRoutes'); 
 
@@ -40,7 +43,9 @@ let isDbConnected = false;
 app.use('/api/menu', menuRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
-// app.use('/api/payment', paymentRoutes); 
+app.use('/api/user',userRoutes)
+
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -77,7 +82,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
         console.log(`\nServer is running on http://localhost:${PORT}`);
         console.log('Admin panel is available at http://localhost:3001');
-    });
+});
 };
 
 startServer();
