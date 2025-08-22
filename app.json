@@ -17,6 +17,7 @@
         "foregroundImage": "./assets/IIT-Kanpur.png",
         "backgroundColor": "#ffffff"
       },
+       "usesCleartextTraffic": true,
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.vhmess"
     },

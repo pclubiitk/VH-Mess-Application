@@ -103,6 +103,10 @@ const PurchasedCoupon = sequelize.define('PurchasedCoupon', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+      booked_for: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     customer_email: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -137,7 +141,8 @@ const PurchasedCoupon = sequelize.define('PurchasedCoupon', {
     },
 }, {
 });
-sequelize.sync({ force: true }); 
+
+sequelize.sync();
 
 
 module.exports = {

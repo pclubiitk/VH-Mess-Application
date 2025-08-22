@@ -51,7 +51,7 @@ export default function Payment() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [contact, setContact] = useState('');
-
+ const [bookedfor, setBookedfor] = useState('');
 
 
   useEffect(() => {
@@ -59,10 +59,10 @@ export default function Payment() {
       try {
         const storedData = await AsyncStorage.getItem('user_form_data');
         if (storedData) {
-          const { name, email, contact } = JSON.parse(storedData);
+          const { name, email } = JSON.parse(storedData);
           setName(name);
           setEmail(email);
-          setContact(contact);
+       
         }
       } catch (error) {
         console.error('Error loading form data:', error);
@@ -130,8 +130,9 @@ const res = await fetch(`${BASE_URL}/api/user/me`, {
   const trimmedName = name.trim();
   const trimmedEmail = email.trim();
   const trimmedContact = contact.trim();
+  const trimmedBookedfor = bookedfor.trim();
 
-  if (!trimmedName || !trimmedEmail || !trimmedContact) {
+  if (!trimmedName || !trimmedEmail || !trimmedContact ||!trimmedBookedfor) {
     Alert.alert('Missing Details', 'Please fill in all the fields.');
     return;
   }
@@ -170,6 +171,7 @@ const res = await fetch(`${BASE_URL}/api/user/me`, {
             customerName: name,
             customerEmail: email,
             customerPhone: contact,
+            bookedfor:bookedfor,
             selections,
           }),
         });
@@ -244,7 +246,14 @@ const res = await fetch(`${BASE_URL}/api/user/me`, {
           keyboardType="email-address"
           onChangeText={text => setEmail(text.toLowerCase())}
         />
-        <Text style={styles.label}>Contact:</Text>
+        <Text style={styles.label}>Booking For:</Text><TextInput
+          style={styles.input}
+          placeholder="Enter the customer name"
+          placeholderTextColor={isDark ? '#aaa' : '#555'}
+          value={bookedfor}
+         
+          onChangeText={text => setBookedfor(text)}
+        />
         <TextInput
           style={styles.input}
           placeholder="Enter Your Contact"

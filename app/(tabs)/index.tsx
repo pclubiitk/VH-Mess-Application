@@ -61,7 +61,6 @@ const handleAuthRedirectParam = async(mealKey:string) => {
         router.push('/(tabs)/auth');
         return;
       }
-      console.log("Checking user authentication...");
       const res = await fetch(`${BASE_URL}/api/user/me`, {
         method: "GET",
         credentials: "include", 
@@ -72,7 +71,8 @@ const handleAuthRedirectParam = async(mealKey:string) => {
       });
 
       if (!res.ok) {
-        throw new Error("Network error");
+            router.push('/(tabs)/auth');
+     
       }
 
       const data = await res.json();

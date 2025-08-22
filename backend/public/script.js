@@ -258,6 +258,7 @@ const table = `
             <tr>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Booked For</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Meal</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -271,6 +272,7 @@ const table = `
                 (c) => `<tr>
                     <td class="px-4 py-2 text-sm font-medium text-gray-900">${c.id}</td>
                     <td class="px-4 py-2 text-sm text-gray-500">${c.customer_name} (${c.customer_phone})</td>
+                    <td class="px-4 py-2 text-sm font-medium text-gray-900">${c.booked_for}</td>
                     <td class="px-4 py-2 text-sm text-gray-500">${new Date(c.meal_date).toLocaleDateString()}</td>
                     <td class="px-4 py-2 text-sm text-gray-500">${c.meal_type}</td>
                     <td class="px-4 py-2 text-sm font-semibold ${
