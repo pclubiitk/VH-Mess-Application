@@ -132,6 +132,7 @@ const handleFinalUpload = async () => {
 
 
 // Fetch and display coupons with optional filters
+let lastFetchedCoupons = [];
 const fetchCoupons = async (params) => {
   lastUsedParams = params;
   const token = localStorage.getItem("authToken");
@@ -147,12 +148,57 @@ const fetchCoupons = async (params) => {
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.message || "Failed to fetch coupons");
+    lastFetchedCoupons = data.coupons || []; // storing filtered data to export as csv file
     renderCoupons(data.coupons);
   } catch (error) {
     displayStatus(error.message, true);
     couponsDisplay.innerHTML = `<p class="text-red-500 text-center p-4">${error.message}</p>`;
   }
 };
+
+// Export as CSV the filtered coupons
+const exportCouponsAsCSV = () => {
+  if (!lastFetchedCoupons || lastFetchedCoupons.length === 0) {
+    displayStatus("No coupons to export.", true);
+    return;
+  }
+
+  // Define CSV headers
+  const headers = [
+    "ID",
+    "Customer Name",
+    "Customer Phone",
+    "Meal Date",
+    "Meal Type",
+    "Order Type",
+    "Status",
+    "Payment Status"
+  ];
+
+  // Build CSV rows
+  const rows = lastFetchedCoupons.map(c => [
+    c.id,
+    c.customer_name,
+    c.customer_phone,
+    new Date(c.meal_date).toLocaleDateString(),
+    c.meal_type,
+    c.order_type,
+    c.status,
+    c.paymentstatus
+  ]);
+
+  const csvArray = [headers, ...rows];
+  const csvContent = csvArray.map(row => row.join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `coupons_filtered${new Date().toISOString()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
 
 
 // Fetch today's coupon summary counts
@@ -536,6 +582,9 @@ tabUpload.addEventListener("click", () => setActiveTab("upload"));
 // File Upload Events
 menuFileInput.addEventListener("change", handleFileSelect);
 finalUploadBtn.addEventListener("click", handleFinalUpload);
+
+// Export as CSV utility
+document.getElementById("export-csv-btn").addEventListener("click", exportCouponsAsCSV);
 
 // Initial Login Status Check
 document.addEventListener("DOMContentLoaded", checkLoginStatus);
