@@ -82,6 +82,11 @@ const PurchasedCoupon = sequelize.define('PurchasedCoupon', {
     },
     status: {
         type: DataTypes.ENUM('Active', 'Used', 'Expired', 'Pending'),
+        defaultValue: 'Active',
+        allowNull: false,
+    },
+    paymentstatus: {
+        type: DataTypes.ENUM('Completed', 'Pending'),
         defaultValue: 'Pending',
         allowNull: false,
     },

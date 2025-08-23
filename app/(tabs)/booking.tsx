@@ -158,7 +158,7 @@ export default function BookingScreen() {
         price: menuData![day][meal].price,
       };
 
-      const nextQty = Math.max(1, entry.qty + delta);
+      const nextQty = Math.max(0, entry.qty + delta);
 
       updated[day] = {
         ...prevDay,
@@ -487,12 +487,24 @@ counterPill: {
 },
 minusBtn: {
   backgroundColor: "#3399cc",
+  width: 32,        
+  height: 32,
+  borderRadius: 16, 
+  justifyContent: "center",
+  alignItems: "center",
+  marginRight: 4,     
 },
 plusBtn: {
   backgroundColor: "#3399cc",
+  width: 32,        
+  height: 32,
+  borderRadius: 16, 
+  justifyContent: "center",
+  alignItems: "center",
+  marginRight: 4,
 },
 counterTextBtn: {
-  fontSize: 18,
+  fontSize: 20,
   color: "#fff",
   fontWeight: "bold",
 },

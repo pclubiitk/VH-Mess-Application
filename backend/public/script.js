@@ -1,6 +1,7 @@
 const API_BASE_URL = "http://localhost:3001/api";
 let lastUsedParams = new URLSearchParams();
 
+// DOM ELEMENT REFERENCES
 const loginView = document.getElementById("login-view");
 const dashboardView = document.getElementById("dashboard-view");
 const loginForm = document.getElementById("login-form");
@@ -27,6 +28,8 @@ const showView = (view) => {
   dashboardView.classList.toggle("hidden", view !== "dashboard");
 };
 
+
+// Switch between "View Coupons" and "Upload Menu" tabs
 const setActiveTab = (tabName) => {
   const tabs = { coupons: tabCoupons, upload: tabUpload };
   const contents = {
@@ -42,6 +45,8 @@ const setActiveTab = (tabName) => {
   }
 };
 
+
+// Success/error notifications in bottom-right corner
 const displayStatus = (message, isError = false) => {
   const bgColor = isError ? "bg-red-500" : "bg-green-500";
   const statusDiv = document.createElement("div");
@@ -55,6 +60,8 @@ const displayStatus = (message, isError = false) => {
   }, 4000);
 };
 
+
+// Auto-set meal filter based on current time
 const setMealFilterByTime = () => {
   const mealTypeFilter = document.getElementById("meal-type-filter");
   const currentHour = new Date().getHours();
@@ -64,6 +71,8 @@ const setMealFilterByTime = () => {
   else mealTypeFilter.value = "Dinner";
 };
 
+
+// Login and Logout
 const handleLogin = async (event) => {
   event.preventDefault();
   const username = loginForm.username.value;
@@ -82,13 +91,14 @@ const handleLogin = async (event) => {
     displayStatus(error.message, true);
   }
 };
-
 const handleLogout = () => {
   localStorage.removeItem("authToken");
   showView("login");
   loginForm.reset();
 };
 
+
+// Menu Upload
 const handleFinalUpload = async () => {
   if (!menuFileInput.files.length) {
     displayStatus("Please select a file to upload.", true);
@@ -120,6 +130,8 @@ const handleFinalUpload = async () => {
   }
 };
 
+
+// Fetch and display coupons with optional filters
 const fetchCoupons = async (params) => {
   lastUsedParams = params;
   const token = localStorage.getItem("authToken");
@@ -142,6 +154,8 @@ const fetchCoupons = async (params) => {
   }
 };
 
+
+// Fetch today's coupon summary counts
 const fetchTodaysSummary = async () => {
   const token = localStorage.getItem("authToken");
   try {
@@ -156,6 +170,8 @@ const fetchTodaysSummary = async () => {
   }
 };
 
+
+// Active menu from backend
 const fetchCurrentMenu = async () => {
   const token = localStorage.getItem("authToken");
   currentMenuDisplay.innerHTML =
@@ -174,6 +190,8 @@ const fetchCurrentMenu = async () => {
   }
 };
 
+
+// Search/Filter 
 const handleFilterSearch = (event) => {
   event.preventDefault();
   const params = new URLSearchParams();
@@ -188,6 +206,8 @@ const handleFilterSearch = (event) => {
   fetchCoupons(params);
 };
 
+
+// Mark coupon as used
 const handleMarkAsUsed = async (couponId) => {
   const token = localStorage.getItem("authToken");
   try {
@@ -207,6 +227,9 @@ const handleMarkAsUsed = async (couponId) => {
     displayStatus(error.message, true);
   }
 };
+
+
+// Mark payment for pending coupon
 const handleMarkPayment = async (couponId) => {
   const token = localStorage.getItem("authToken");
   try {
@@ -227,6 +250,8 @@ const handleMarkPayment = async (couponId) => {
   }
 };
 
+
+// Today's summary cards for breakfast, lunch, dinner
 const renderSummary = (summary, upcomingMeal) => {
   const meals = [
     { type: "Breakfast", color: "blue" },
@@ -265,6 +290,8 @@ const renderSummary = (summary, upcomingMeal) => {
     .join("");
 };
 
+
+// Render coupon table
 const renderCoupons = (coupons) => {
   if (!coupons || coupons.length === 0) {
     couponsDisplay.innerHTML =
@@ -280,6 +307,7 @@ const renderCoupons = (coupons) => {
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Meal</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Order Type</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment Status</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                     </tr></thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -292,8 +320,9 @@ const renderCoupons = (coupons) => {
                             <td class="px-4 py-2 text-sm text-gray-500">${c.meal_type}</td>
                             <td class="px-4 py-2 text-sm text-gray-500">${c.order_type}</td>
                             <td class="px-4 py-2 text-sm font-semibold ${c.status === "Active" ? "text-green-600" : "text-gray-500"}">${c.status}</td>
+                            <td class="px-4 py-2 text-sm font-semibold ${c.paymentstatus === "Completed" ? "text-green-600" : "text-gray-500"}">${c.paymentstatus}</td>
                             <td class="px-4 py-2 text-sm">
-                                ${c.status === "Active" ? `<button onclick="handleMarkAsUsed('${c.id}')" class="font-medium text-indigo-600 hover:text-indigo-800">Mark Used</button>`: c.status === "Pending"?`<button onclick="handleMarkPayment('${c.id}')" class="font-medium text-blue-600 hover:text-blue-800">Verify Payment</button>` : `<span class="text-gray-400">-</span>`}
+                                ${c.status === "Active" ? `<button onclick="handleMarkAsUsed('${c.id}')" class="font-medium text-indigo-600 hover:text-indigo-800">Mark Used</button><br/>`:``}${ c.paymentstatus === "Pending"?`<button onclick="handleMarkPayment('${c.id}')" class="font-medium text-blue-600 hover:text-blue-800">Verify Payment</button>` : `<span class="text-gray-400"></span>`}
                             </td>
                         </tr>`
                           )
@@ -303,6 +332,8 @@ const renderCoupons = (coupons) => {
   couponsDisplay.innerHTML = table;
 };
 
+
+// Render menu items as a table grouped by day and meal type
 const renderMenuAsTable = (menuItems, targetElement) => {
   if (!menuItems || menuItems.length === 0) {
     targetElement.innerHTML =
@@ -387,6 +418,8 @@ const renderMenuAsTable = (menuItems, targetElement) => {
   targetElement.innerHTML = html;
 };
 
+
+// Preview the menu file and upload
 const handleFileSelect = (event) => {
   const file = event.target.files[0];
   if (!file) {
@@ -454,6 +487,8 @@ const handleFileSelect = (event) => {
   reader.readAsArrayBuffer(file);
 };
 
+
+// Authentication
 const checkLoginStatus = async () => {
   const token = localStorage.getItem("authToken");
   if (!token) {
@@ -481,15 +516,26 @@ const checkLoginStatus = async () => {
   }
 };
 
+// ---- Event Listeners ----//
+
+// Login and logout Events
 loginForm.addEventListener("submit", handleLogin);
 logoutButton.addEventListener("click", handleLogout);
+
+// Coupon Filter Events 
 filterForm.addEventListener("submit", handleFilterSearch);
 clearFiltersBtn.addEventListener("click", () => {
   filterForm.reset();
   fetchCoupons(new URLSearchParams());
 });
+
+// Tab Navigation
 tabCoupons.addEventListener("click", () => setActiveTab("coupons"));
 tabUpload.addEventListener("click", () => setActiveTab("upload"));
+
+// File Upload Events
 menuFileInput.addEventListener("change", handleFileSelect);
 finalUploadBtn.addEventListener("click", handleFinalUpload);
+
+// Initial Login Status Check
 document.addEventListener("DOMContentLoaded", checkLoginStatus);

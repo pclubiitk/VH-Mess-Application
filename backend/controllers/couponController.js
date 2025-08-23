@@ -2,7 +2,7 @@ const { PurchasedCoupon, MenuItem, sequelize } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 const initiateOrder = async (req, res) => {
-    const { customerName, customerEmail, customerPhone, selections, order_type } = req.body;
+    const { customerName, customerEmail, customerPhone, selections, order_type, paymentstatus } = req.body;
 
     if (!customerName || !customerEmail || !customerPhone || !selections || !Array.isArray(selections) || selections.length === 0) {
         return res.status(400).json({ success: false, message: 'Invalid request. Please provide customer details and selections.' });
@@ -41,7 +41,8 @@ const initiateOrder = async (req, res) => {
                 meal_type: meal_type,
                 order_type: order_type,
                 order_id: order_id,
-                status: 'Pending'
+                status: 'Active',
+                paymentstatus: 'Pending'
             });
         }
 
