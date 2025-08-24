@@ -130,7 +130,6 @@ const handleAuthRedirectParam = async(mealKey:string) => {
         router.push("/(tabs)/auth");
       }
     } catch (error) {
-      console.error(error);
       Alert.alert("Error", "Something went wrong.");
     }
   };

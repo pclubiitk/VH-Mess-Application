@@ -179,11 +179,9 @@ export default function TabLayout() {
             />
                   <Tabs.Screen
               name="auth"
-              options={{
+              options={{href:null,
                 title: 'Verification',
-                tabBarIcon: ({ color }) => (
-                  <IconSymbol size={28} name="clock.arrow.circlepath" color={color} />
-                ),
+               
               }}
             />
             <Tabs.Screen name="booking" options={{ href: null, tabBarStyle: { display: 'none' } }} />

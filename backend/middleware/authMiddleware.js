@@ -32,7 +32,7 @@ if (!token) {
     }
 
     //need to change this to process.env.JWT_SECRET
-   const decoded = jwt.verify(token, "eeee");
+   const decoded = jwt.verify(token, process.env.JWT_SECRET);
    console.log(decoded);
 
     const user = await User.findOne({ where: { email: decoded.email } });
@@ -47,7 +47,7 @@ if (!token) {
 
     next();
   } catch (err) {
-    return res.status(401).json({ message: err.message || "Unauthorized" });
+    return res.status(401).json({ message: err.message });
   }
 };
 

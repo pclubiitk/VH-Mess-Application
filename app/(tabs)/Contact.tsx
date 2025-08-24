@@ -15,7 +15,7 @@ export default function ContactScreen() {
     <View style={styles.container}>
       
          <Text style={styles.cardHeading}>
-        For any queries and cancelation of the bookings, please contact usat following details:
+        For any queries and cancelation of the bookings, please contact us at following details:
         </Text>
 
       <View style={styles.card}>

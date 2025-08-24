@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
 const {sendmail} =require("../utilities/mail")
-const {BASE_URL}=require("../")
+const {BASE_URL,VERIFIED_URL}=require("../config/constant")
 
 
 const uploadMenu = async (req, res) => {
@@ -333,8 +333,8 @@ const data = await User.create({
 
 
 
-    await sendmail(email,"Welcome to VH Mess" ,`Click to verify: http://172.23.35.151:3001/api/user/verify?token=${token}`);
-    console.log(`Click to verify: http://172.23.35.151:3001/api/user/verify?token=${token}`)
+    await sendmail(email,"Welcome to VH Mess" ,`Click to verify:${BASE_URL}/api/user/verify?token=${token}`);
+   
 
     return res.status(201).json({ message: "Signup successful. Please check your email and complete the verification before booking." ,"status":true, "token": token });
   } catch (err) {
@@ -386,7 +386,7 @@ const newToken = jwt.sign(
 
 
 
-    res.redirect("http://localhost:8081/success/verified")
+    res.redirect(`${VERIFIED_URL}`)
     res.json({ message: "Email verified successfully","token":newToken });
     
 

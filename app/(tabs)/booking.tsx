@@ -100,7 +100,7 @@ export default function BookingScreen() {
 const resetWeeklyCoupons = async () => {
   const lastResetDate = sessionStorage.getItem("lastResetDate");
   const today = new Date().toISOString().split("T")[0];
-  console.log(lastResetDate, today);
+
   if (lastResetDate === today) {
     
     return;
