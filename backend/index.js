@@ -12,7 +12,6 @@ const menuRoutes = require('./routes/menuRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const userRoutes = require('./routes/userRoutes')
-const cookieParser = require('cookie-parser');
 
 
 // const paymentRoutes = require('./routes/paymentRoutes'); 

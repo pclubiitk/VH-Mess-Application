@@ -1,2 +1,7 @@
-export const BASE_URL = "http://172.23.35.151:3001";
-export const VERIFIED_URL="http://localhost:8081/success/verified"
+const BASE_URL = "http://localhost:3001";
+const VERIFIED_URL = "http://localhost:8081/success/verified";
+
+module.exports = {
+  BASE_URL,
+  VERIFIED_URL,
+};

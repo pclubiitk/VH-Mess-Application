@@ -33,7 +33,7 @@ export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => {
 
     return freshMenu;
   } catch (err) {
-    console.error("Failed to load weekly menu:", err);
+    // console.error("Failed to load weekly menu:", err);
     return null;
   }
 };
@@ -83,7 +83,7 @@ const fetchWeeklyMenuFromServer = async (): Promise<{
       lastUpdated: data.lastUpdated || new Date().toISOString(),
     };
   } catch (error) {
-    console.error("Failed to fetch menu from server:", error);
+    // console.error("Failed to fetch menu from server:", error);
     return { menu: {}, lastUpdated: "" };
   }
 };
@@ -110,6 +110,6 @@ export const fetchAndSetCutoffTimings = async () => {
       console.warn("Failed to fetch cutoff timings, using defaults.");
     }
   } catch (error) {
-    console.error("Error fetching cutoff timings:", error);
+    // console.error("Error fetching cutoff timings:", error);
   }
 };

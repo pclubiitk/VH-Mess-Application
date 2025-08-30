@@ -9,7 +9,6 @@ export default function AuthScreen({ isDark = false }) {
   const styles = createStyles(isDark);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [rollNumber, setRollNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(true);
   const [isDisplay,setisDisplay] = useState(false);

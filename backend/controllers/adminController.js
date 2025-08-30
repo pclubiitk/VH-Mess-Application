@@ -1,11 +1,13 @@
-const { MenuItem, PurchasedCoupon, sequelize, MealTiming, User  } = require("../config/database");
-const{hashGenerator}=require("../utilities/generate-hash")
+const {
+  MenuItem,
+  PurchasedCoupon,
+  sequelize,
+  MealTiming,
+} = require("../config/database");
 const xlsx = require("xlsx");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
-const {sendmail} =require("../utilities/mail")
-const {BASE_URL,VERIFIED_URL}=require("../config/constant")
 
 
 const uploadMenu = async (req, res) => {
@@ -27,12 +29,17 @@ const uploadMenu = async (req, res) => {
 
     // === Parse timing sheet ===
     const timingSheet = workbook.Sheets[timingSheetName];
-    const timingRows = xlsx.utils.sheet_to_json(timingSheet, { defval: "", raw: false });
+    const timingRows = xlsx.utils.sheet_to_json(timingSheet, {
+      defval: "",
+      raw: false,
+    });
 
     const mealTimings = [];
 
     timingRows.forEach((row, index) => {
-      const meal = String(row.meal || "").trim().toLowerCase();
+      const meal = String(row.meal || "")
+        .trim()
+        .toLowerCase();
       const closetime = parseInt(row.closetime);
 
       if (!meal || isNaN(closetime)) {
@@ -58,13 +65,24 @@ const uploadMenu = async (req, res) => {
     const rows = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
 
     const validDays = [
-      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
     ];
 
     const normalizeDay = (str) => {
       const map = {
-        mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday",
-        fri: "Friday", sat: "Saturday", sun: "Sunday",
+        mon: "Monday",
+        tue: "Tuesday",
+        wed: "Wednesday",
+        thu: "Thursday",
+        fri: "Friday",
+        sat: "Saturday",
+        sun: "Sunday",
       };
       if (!str) return null;
       const key = String(str).toLowerCase().slice(0, 3);
@@ -96,7 +114,7 @@ const uploadMenu = async (req, res) => {
           price: parseFloat(row[2]),
           is_active: true,
           max_coupons: parseInt(maxCoupons) || null,
-             available_coupons: parseInt(maxCoupons) || null,
+          available_coupons: parseInt(maxCoupons) || null,
         });
       }
 
@@ -108,7 +126,7 @@ const uploadMenu = async (req, res) => {
           price: parseFloat(row[4]),
           is_active: true,
           max_coupons: parseInt(maxCoupons) || null,
-             available_coupons: parseInt(maxCoupons) || null,
+          available_coupons: parseInt(maxCoupons) || null,
         });
       }
 
@@ -123,11 +141,11 @@ const uploadMenu = async (req, res) => {
           available_coupons: parseInt(maxCoupons) || null,
         });
       }
-  }
-  
+    }
+
     if (newMenuItems.length === 0) {
       throw new Error(
-        "No valid menu items with descriptions found in the uploaded file.",
+        "No valid menu items with descriptions found in the uploaded file."
       );
     }
 
@@ -198,7 +216,7 @@ const getCurrentAdminMenu = async (req, res) => {
       where: { is_active: true },
       order: [
         sequelize.literal(
-          "FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')",
+          "FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')"
         ),
         sequelize.literal("FIELD(meal_type, 'Breakfast', 'Lunch', 'Dinner')"),
       ],
@@ -245,7 +263,9 @@ const getAllCoupons = async (req, res) => {
 
 const getTodaysSummary = async (req, res) => {
   try {
-    const nowInIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const nowInIST = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    );
     const today = nowInIST.toISOString().split("T")[0];
     const hour = nowInIST.getHours();
     let upcomingMeal = "Dinner";
@@ -268,7 +288,10 @@ const getTodaysSummary = async (req, res) => {
     });
 
     coupons.forEach((c) => {
-      if (summary[c.meal_type] && summary[c.meal_type][c.status] !== undefined) {
+      if (
+        summary[c.meal_type] &&
+        summary[c.meal_type][c.status] !== undefined
+      ) {
         summary[c.meal_type][c.status]++;
       }
     });
@@ -288,7 +311,7 @@ const markCouponAsUsed = async (req, res) => {
     const { id } = req.params;
     const [affectedRows] = await PurchasedCoupon.update(
       { status: "Used" },
-      { where: { id: id, status: "Active" } },
+      { where: { id: id, status: "Active" } }
     );
     if (affectedRows > 0) {
       res.json({ success: true, message: `Coupon ${id} marked as used.` });
@@ -304,100 +327,6 @@ const markCouponAsUsed = async (req, res) => {
   }
 };
 
-
-
-
-
-
- const signup = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    const existing = await User.findOne({ where: { email } });
-    if (existing) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
- const hashpass = await bcrypt.hash(password, 10);
-
-const data = await User.create({
-  name,
-  email,
-  password: hashpass, 
-  verified: false
-});
-
-   const token = jwt.sign(
-  { name: name, email: email, verified: false },
-  "eeee",
-  { expiresIn: "1h" }
-);
-
-
-
-    await sendmail(email,"Welcome to VH Mess" ,`Click to verify:${BASE_URL}/api/user/verify?token=${token}`);
-   
-
-    return res.status(201).json({ message: "Signup successful. Please check your email and complete the verification before booking." ,"status":true, "token": token });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" ,"status":false});
-  }
-};
- const signin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (!user.verified) {
-      return res.status(401).json({ message: "Please verify your email first" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-    res.json({ message: "Signin successful" ,"status":true, "token": token });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
- const verify = async (req, res) => {
-  try {
-     const { token } = req.query;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-
-
-      const user = await User.findOne({ where: { email: decoded.email } });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    await user.update({ verified: true });
-const newToken = jwt.sign(
-  { id: user.id, email: user.email, verified: user.verified },
- "eeee",
-  { expiresIn: "1h" }
-);
-
-
-
-
-    res.redirect(`${VERIFIED_URL}`)
-    res.json({ message: "Email verified successfully","token":newToken });
-    
-
-
-
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: "Invalid or expired token" });
-  }
-};
-
 module.exports = {
   loginAdmin,
   uploadMenu,
@@ -406,7 +335,4 @@ module.exports = {
   verifyToken,
   markCouponAsUsed,
   getCurrentAdminMenu,
-  signin,
-  signup,
-  verify
 };

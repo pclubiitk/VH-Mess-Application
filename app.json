@@ -17,7 +17,6 @@
         "foregroundImage": "./assets/IIT-Kanpur.png",
         "backgroundColor": "#ffffff"
       },
-       "usesCleartextTraffic": true,
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.vhmess"
     },
@@ -34,17 +33,24 @@
           "image": "./assets/IIT-Kanpur.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "image": "./assets/IIT-Kanpur.png",
-            "backgroundColor": "#0f172a"
-          }
+          "backgroundColor": "#ffffff"
+          // TODO: Once we sync the app theme to device default, then enable this to get the dark theme in start up
+          // "dark": {
+          //   "image": "./assets/IIT-Kanpur.png",
+          //   "backgroundColor": "#0f172a"
+          // }
         }
       ],
       "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "aa1307ac-1624-4d9a-8cc6-e1f12b53a3fe"
+      }
     }
   }
 }

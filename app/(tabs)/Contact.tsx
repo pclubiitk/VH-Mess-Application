@@ -1,38 +1,59 @@
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@react-navigation/native";
 import React, { useEffect, useMemo, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons"; // for icons
+import { CONTACT_EMAIL, CONTACT_PHONE } from "@/constants/config";
 
 export default function ContactScreen() {
   const colorScheme = useTheme().dark;
   const mode = colorScheme ? "dark" : "light";
 
   const styles = useMemo(() => createStyles(mode), [mode]);
-  const [loading, setLoading] = useState(true);
-
   return (
     <View style={styles.container}>
-      
-         <Text style={styles.cardHeading}>
-        For any queries and cancelation of the bookings, please contact us at following details:
-        </Text>
-
       <View style={styles.card}>
-        {/* <Text style={styles.label}>Name</Text>
-        <Text style={styles.value}>VH Mess</Text> */}
-     
-
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.row}>
+          For any queries and cancellation of the bookings, Contact:
+        </Text>
         <View style={styles.row}>
-          <Ionicons name="mail" size={20} color={styles.iconColor.color} />
-          <Text style={styles.value}>vh_dining@iitk.ac.in</Text>
+          <View style={styles.row}>
+            <Ionicons name="mail" size={20} color={styles.iconColor.color} />
+            <Text
+              style={styles.value}
+              onPress={() => {
+                Linking.openURL(`mailto:${CONTACT_EMAIL}`);
+              }}
+              selectable
+            >
+              {CONTACT_EMAIL}
+            </Text>
+          </View>
+
+          <Text style={styles.label}>Email</Text>
         </View>
-
-        <Text style={styles.label}>Phone</Text>
         <View style={styles.row}>
-          <Ionicons name="call" size={20} color={styles.iconColor.color} />
-          <Text style={styles.value}>0512-259-7246</Text>
+          <View style={styles.row}>
+            <Ionicons name="call" size={20} color={styles.iconColor.color} />
+            <Text
+              style={styles.value}
+              onPress={() => {
+                Linking.openURL(`tel:${CONTACT_PHONE}`);
+              }}
+              selectable
+            >
+              {CONTACT_PHONE}
+            </Text>
+          </View>
+
+          <Text style={styles.label}>Phone</Text>
         </View>
       </View>
     </View>
@@ -70,19 +91,18 @@ function createStyles(mode: "light" | "dark") {
       fontSize: 14,
       fontFamily: "Poppins_500Medium",
       color: isDark ? "#bbb" : "#555",
-      marginTop: 12,
     },
     value: {
       fontSize: 16,
       fontFamily: "Poppins_600SemiBold",
       color: isDark ? "#fff" : "#000",
-      marginTop: 4,
-      marginLeft: 4,
+      marginLeft: 10,
     },
     row: {
       flexDirection: "row",
       alignItems: "center",
-      marginTop: 6,
+      marginBottom: 10,
+      justifyContent: "space-between",
     },
     iconColor: {
       color: isDark ? Colors.dark.tint : Colors.light.tint,

@@ -15,7 +15,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  findNodeHandle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BASE_URL } from "@/constants/config";
@@ -26,7 +25,6 @@ type Booking = Record<string, Record<MealKey, { qty: number; price: number }>>;
 
 function getWeekRange(date: Date) {
   const day = date.getDay() || 7;
-        
   const monday = new Date(date);
   monday.setDate(date.getDate() - day + 1);
   const sunday = new Date(monday);
