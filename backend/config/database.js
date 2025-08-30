@@ -91,6 +91,11 @@ const MenuItem = sequelize.define(
       defaultValue: true,
       allowNull: false,
     },
+    order_type: {
+      type: DataTypes.ENUM("Dine-In", "Takeaway"),
+      allowNull: false,
+    },
+
     max_coupons: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -139,6 +144,14 @@ const PurchasedCoupon = sequelize.define(
     },
     meal_type: {
       type: DataTypes.ENUM("Breakfast", "Lunch", "Dinner"),
+      allowNull: false,
+    },
+    order_type: {
+      type: DataTypes.ENUM("Dine-In", "Takeaway"),
+      allowNull: false,
+    },
+    order_type: {
+      type: DataTypes.ENUM("Dine-In", "Takeaway"),
       allowNull: false,
     },
     status: {

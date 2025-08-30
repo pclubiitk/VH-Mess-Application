@@ -1,6 +1,7 @@
 const API_BASE_URL = "http://localhost:3001/api";
 let lastUsedParams = new URLSearchParams();
 
+// DOM ELEMENT REFERENCES
 const loginView = document.getElementById("login-view");
 const dashboardView = document.getElementById("dashboard-view");
 const loginForm = document.getElementById("login-form");
@@ -27,6 +28,7 @@ const showView = (view) => {
   dashboardView.classList.toggle("hidden", view !== "dashboard");
 };
 
+// Switch between "View Coupons" and "Upload Menu" tabs
 const setActiveTab = (tabName) => {
   const tabs = { coupons: tabCoupons, upload: tabUpload };
   const contents = {
@@ -42,6 +44,7 @@ const setActiveTab = (tabName) => {
   }
 };
 
+// Success/error notifications in bottom-right corner
 const displayStatus = (message, isError = false) => {
   const bgColor = isError ? "bg-red-500" : "bg-green-500";
   const statusDiv = document.createElement("div");
@@ -55,6 +58,7 @@ const displayStatus = (message, isError = false) => {
   }, 4000);
 };
 
+// Auto-set meal filter based on current time
 const setMealFilterByTime = () => {
   const mealTypeFilter = document.getElementById("meal-type-filter");
   const currentHour = new Date().getHours();
@@ -64,6 +68,7 @@ const setMealFilterByTime = () => {
   else mealTypeFilter.value = "Dinner";
 };
 
+// Login and Logout
 const handleLogin = async (event) => {
   event.preventDefault();
   const username = loginForm.username.value;
@@ -82,13 +87,13 @@ const handleLogin = async (event) => {
     displayStatus(error.message, true);
   }
 };
-
 const handleLogout = () => {
   localStorage.removeItem("authToken");
   showView("login");
   loginForm.reset();
 };
 
+// Menu Upload
 const handleFinalUpload = async () => {
   if (!menuFileInput.files.length) {
     displayStatus("Please select a file to upload.", true);
@@ -120,6 +125,8 @@ const handleFinalUpload = async () => {
   }
 };
 
+// Fetch and display coupons with optional filters
+let lastFetchedCoupons = [];
 const fetchCoupons = async (params) => {
   lastUsedParams = params;
   const token = localStorage.getItem("authToken");
@@ -135,6 +142,7 @@ const fetchCoupons = async (params) => {
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.message || "Failed to fetch coupons");
+    lastFetchedCoupons = data.coupons || []; // storing filtered data to export as csv file
     renderCoupons(data.coupons);
   } catch (error) {
     displayStatus(error.message, true);
@@ -142,6 +150,50 @@ const fetchCoupons = async (params) => {
   }
 };
 
+// Export as CSV the filtered coupons
+const exportCouponsAsCSV = () => {
+  if (!lastFetchedCoupons || lastFetchedCoupons.length === 0) {
+    displayStatus("No coupons to export.", true);
+    return;
+  }
+
+  // Define CSV headers
+  const headers = [
+    "ID",
+    "Customer Name",
+    "Customer Phone",
+    "Meal Date",
+    "Meal Type",
+    "Order Type",
+    "Status",
+    "Payment Status",
+  ];
+
+  // Build CSV rows
+  const rows = lastFetchedCoupons.map((c) => [
+    c.id,
+    c.customer_name,
+    c.customer_phone,
+    new Date(c.meal_date).toLocaleDateString(),
+    c.meal_type,
+    c.order_type,
+    c.status,
+    c.paymentstatus,
+  ]);
+
+  const csvArray = [headers, ...rows];
+  const csvContent = csvArray.map((row) => row.join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `coupons_filtered${new Date().toISOString()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Fetch today's coupon summary counts
 const fetchTodaysSummary = async () => {
   const token = localStorage.getItem("authToken");
   try {
@@ -156,6 +208,7 @@ const fetchTodaysSummary = async () => {
   }
 };
 
+// Active menu from backend
 const fetchCurrentMenu = async () => {
   const token = localStorage.getItem("authToken");
   currentMenuDisplay.innerHTML =
@@ -174,6 +227,7 @@ const fetchCurrentMenu = async () => {
   }
 };
 
+// Search/Filter
 const handleFilterSearch = (event) => {
   event.preventDefault();
   const params = new URLSearchParams();
@@ -188,6 +242,7 @@ const handleFilterSearch = (event) => {
   fetchCoupons(params);
 };
 
+// Mark coupon as used
 const handleMarkAsUsed = async (couponId) => {
   const token = localStorage.getItem("authToken");
   try {
@@ -208,6 +263,28 @@ const handleMarkAsUsed = async (couponId) => {
   }
 };
 
+// Mark payment for pending coupon
+const handleMarkPayment = async (couponId) => {
+  const token = localStorage.getItem("authToken");
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/coupons/payment/${couponId}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    displayStatus(data.message);
+    fetchCoupons(lastUsedParams);
+    fetchTodaysSummary();
+  } catch (error) {
+    displayStatus(error.message, true);
+  }
+};
+
+// Today's summary cards for breakfast, lunch, dinner
 const renderSummary = (summary, upcomingMeal) => {
   const meals = [
     { type: "Breakfast", color: "blue" },
@@ -246,53 +323,74 @@ const renderSummary = (summary, upcomingMeal) => {
     .join("");
 };
 
+// Render coupon table
 const renderCoupons = (coupons) => {
   if (!coupons || coupons.length === 0) {
     couponsDisplay.innerHTML =
       '<p class="text-gray-500 text-center p-4">No coupons found.</p>';
     return;
   }
-const table = `
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Booked For</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Meal</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Created At</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            ${coupons
-              .map(
-                (c) => `<tr>
-                    <td class="px-4 py-2 text-sm font-medium text-gray-900">${c.id}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">${c.customer_name} (${c.customer_phone})</td>
-                    <td class="px-4 py-2 text-sm font-medium text-gray-900">${c.booked_for}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">${new Date(c.meal_date).toLocaleDateString()}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">${c.meal_type}</td>
-                    <td class="px-4 py-2 text-sm font-semibold ${
-                      c.status === "Active" ? "text-green-600" : "text-gray-500"
-                    }">${c.status}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">${new Date(c.createdAt).toLocaleString()}</td>
-                    <td class="px-4 py-2 text-sm">
-                        ${
-                          c.status === "Active"
-                            ? `<button onclick="handleMarkAsUsed('${c.id}')" class="font-medium text-indigo-600 hover:text-indigo-800">Mark Used</button>`
-                            : `<span class="text-gray-400">-</span>`
-                        }
-                    </td>
-                </tr>`
-              )
-              .join("")}
-        </tbody>
-    </table>`;
-couponsDisplay.innerHTML = table;
-            }
+  const table = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-100"><tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Meal</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Order Type</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                    </tr></thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${coupons
+                          .map(
+                            (c) => `<tr>
+                            <td class="px-4 py-2 text-sm font-medium text-gray-900">${
+                              c.id
+                            }</td>
+                            <td class="px-4 py-2 text-sm text-gray-500">${
+                              c.customer_name
+                            } (${c.customer_phone})</td>
+                            <td class="px-4 py-2 text-sm text-gray-500">${new Date(
+                              c.meal_date
+                            ).toLocaleDateString()}</td>
+                            <td class="px-4 py-2 text-sm text-gray-500">${
+                              c.meal_type
+                            }</td>
+                            <td class="px-4 py-2 text-sm text-gray-500">${
+                              c.order_type
+                            }</td>
+                            <td class="px-4 py-2 text-sm font-semibold ${
+                              c.status === "Active"
+                                ? "text-green-600"
+                                : "text-gray-500"
+                            }">${c.status}</td>
+                            <td class="px-4 py-2 text-sm font-semibold ${
+                              c.paymentstatus === "Completed"
+                                ? "text-green-600"
+                                : "text-gray-500"
+                            }">${c.paymentstatus}</td>
+                            <td class="px-4 py-2 text-sm">
+                                ${
+                                  c.status === "Active"
+                                    ? `<button onclick="handleMarkAsUsed('${c.id}')" class="font-medium text-indigo-600 hover:text-indigo-800">Mark Used</button><br/>`
+                                    : ``
+                                }${
+                              c.paymentstatus === "Pending"
+                                ? `<button onclick="handleMarkPayment('${c.id}')" class="font-medium text-blue-600 hover:text-blue-800">Verify Payment</button>`
+                                : `<span class="text-gray-400"></span>`
+                            }
+                            </td>
+                        </tr>`
+                          )
+                          .join("")}
+                    </tbody>
+                </table>`;
+  couponsDisplay.innerHTML = table;
+};
+
+// Render menu items as a table grouped by day and meal type
 const renderMenuAsTable = (menuItems, targetElement) => {
   if (!menuItems || menuItems.length === 0) {
     targetElement.innerHTML =
@@ -320,17 +418,16 @@ const renderMenuAsTable = (menuItems, targetElement) => {
       const dinner = dayItems.find((i) => i.meal_type === "Dinner");
       const maxCoupons = dayItems[0]?.max_coupons || "";
 
-return {
-  DayOfWeek: day,
-  BreakfastItem: breakfast?.description || "",
-  BreakfastPrice: breakfast?.price || "",
-  LunchItem: lunch?.description || "",
-  LunchPrice: lunch?.price || "",
-  DinnerItem: dinner?.description || "",
-  DinnerPrice: dinner?.price || "",
-  MaxCoupons: maxCoupons,
-};
-
+      return {
+        DayOfWeek: day,
+        BreakfastItem: breakfast?.description || "",
+        BreakfastPrice: breakfast?.price || "",
+        LunchItem: lunch?.description || "",
+        LunchPrice: lunch?.price || "",
+        DinnerItem: dinner?.description || "",
+        DinnerPrice: dinner?.price || "",
+        MaxCoupons: maxCoupons,
+      };
     })
     .filter((row) => groupedByDay[row.DayOfWeek]);
 
@@ -340,26 +437,26 @@ return {
     return;
   }
 
-const headers = [
-  "Day",
-  "Breakfast",
-  "Price",
-  "Lunch",
-  "Price",
-  "Dinner",
-  "Price",
-  "Max Coupons",
-];
-const headerKeys = [
-  "DayOfWeek",
-  "BreakfastItem",
-  "BreakfastPrice",
-  "LunchItem",
-  "LunchPrice",
-  "DinnerItem",
-  "DinnerPrice",
-  "MaxCoupons",
-];
+  const headers = [
+    "Day",
+    "Breakfast",
+    "Price",
+    "Lunch",
+    "Price",
+    "Dinner",
+    "Price",
+    "Max Coupons",
+  ];
+  const headerKeys = [
+    "DayOfWeek",
+    "BreakfastItem",
+    "BreakfastPrice",
+    "LunchItem",
+    "LunchPrice",
+    "DinnerItem",
+    "DinnerPrice",
+    "MaxCoupons",
+  ];
 
   let html = '<table class="min-w-full divide-y divide-gray-200 text-xs">';
   html += '<thead class="bg-gray-100"><tr>';
@@ -384,6 +481,7 @@ const headerKeys = [
   targetElement.innerHTML = html;
 };
 
+// Preview the menu file and upload
 const handleFileSelect = (event) => {
   const file = event.target.files[0];
   if (!file) {
@@ -417,28 +515,27 @@ const handleFileSelect = (event) => {
           price: "DinnerPrice",
         },
       };
-for (const row of jsonData) {
-  const day = row.DayOfWeek;
-  if (!day) continue;
+      for (const row of jsonData) {
+        const day = row.DayOfWeek;
+        if (!day) continue;
 
-  const maxCoupons = row["MaxCoupon"]; // new single-column logic
+        const maxCoupons = row["MaxCoupon"]; // new single-column logic
 
-  for (const mealType in mealKeys) {
-    const description = row[mealKeys[mealType].item];
-    const price = row[mealKeys[mealType].price];
+        for (const mealType in mealKeys) {
+          const description = row[mealKeys[mealType].item];
+          const price = row[mealKeys[mealType].price];
 
-    if (description && String(description).trim() !== "" && price) {
-      menuToPreview.push({
-        day_of_week: day,
-        meal_type: mealType,
-        description: String(description).trim(),
-        price: parseFloat(price),
-        max_coupons: maxCoupons ? parseInt(maxCoupons) : "",
-      });
-    }
-  }
-}
-
+          if (description && String(description).trim() !== "" && price) {
+            menuToPreview.push({
+              day_of_week: day,
+              meal_type: mealType,
+              description: String(description).trim(),
+              price: parseFloat(price),
+              max_coupons: maxCoupons ? parseInt(maxCoupons) : "",
+            });
+          }
+        }
+      }
 
       if (menuToPreview.length === 0) {
         throw new Error(
@@ -457,6 +554,7 @@ for (const row of jsonData) {
   reader.readAsArrayBuffer(file);
 };
 
+// Authentication
 const checkLoginStatus = async () => {
   const token = localStorage.getItem("authToken");
   if (!token) {
@@ -484,15 +582,31 @@ const checkLoginStatus = async () => {
   }
 };
 
+// ---- Event Listeners ----//
+
+// Login and logout Events
 loginForm.addEventListener("submit", handleLogin);
 logoutButton.addEventListener("click", handleLogout);
+
+// Coupon Filter Events
 filterForm.addEventListener("submit", handleFilterSearch);
 clearFiltersBtn.addEventListener("click", () => {
   filterForm.reset();
   fetchCoupons(new URLSearchParams());
 });
+
+// Tab Navigation
 tabCoupons.addEventListener("click", () => setActiveTab("coupons"));
 tabUpload.addEventListener("click", () => setActiveTab("upload"));
+
+// File Upload Events
 menuFileInput.addEventListener("change", handleFileSelect);
 finalUploadBtn.addEventListener("click", handleFinalUpload);
+
+// Export as CSV utility
+document
+  .getElementById("export-csv-btn")
+  .addEventListener("click", exportCouponsAsCSV);
+
+// Initial Login Status Check
 document.addEventListener("DOMContentLoaded", checkLoginStatus);

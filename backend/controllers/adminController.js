@@ -327,6 +327,28 @@ const markCouponAsUsed = async (req, res) => {
   }
 };
 
+const markPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [affectedRows] = await PurchasedCoupon.update(
+      { paymentstatus: "Completed" },
+      { where: { id: id, paymentstatus: "Pending" } },
+    );
+    if (affectedRows > 0) {
+      res.json({ success: true, message: `Coupon ${id} marked as Paid.` });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: `Coupon ${id} not found or payment is not Pending.`,
+      });
+    }
+  } catch (error) {
+    console.error("Error marking payment as Completed:", error);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+
+
 module.exports = {
   loginAdmin,
   uploadMenu,
@@ -335,4 +357,5 @@ module.exports = {
   verifyToken,
   markCouponAsUsed,
   getCurrentAdminMenu,
-};
+  markPayment,
+};    
